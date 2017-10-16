@@ -93,7 +93,8 @@
     "read-yaml": "1.1.0",
     "remarkable": "1.7.1",
     "serve-here": "3.2.0",
-    "shelljs": "0.7.8"
+    "shelljs": "0.7.8",
+    "string-argv": "0.0.2"
   },
   "ava": {
     "source": [
