@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Not only static generator",
   "main": "index.js",
+  "bin": {
+    "nosg": "bin/nosg"
+  },
   "directories": {
     "test": "tests"
   },
@@ -55,14 +58,6 @@
     "url": "https://github.com/AlexisTessier/nosg/issues"
   },
   "homepage": "https://github.com/AlexisTessier/nosg#readme",
-  "dependencies": {
-    "glob": "7.1.2",
-    "hard-rejection": "1.0.0",
-    "inquirer": "3.1.1",
-    "jsonlint": "1.6.2",
-    "registry-auth-token": "3.3.1",
-    "shelljs": "0.7.8"
-  },
   "watch": {
     "lint": "./sources",
     "build": {
@@ -117,5 +112,8 @@
   },
   "optionalDependencies": {
     "ttab": "0.6.0"
+  },
+  "dependencies": {
+    "cleanquirer": "0.1.0"
   }
 }

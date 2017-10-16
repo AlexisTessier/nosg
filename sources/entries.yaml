@@ -1,1 +1,3 @@
-#index: sources/mymodule
+index: sources/nosg
+api: sources/nosg-api
+cli: sources/nosg-cli
