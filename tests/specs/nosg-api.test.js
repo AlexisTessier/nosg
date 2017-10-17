@@ -10,8 +10,12 @@ test('Type and API', t => {
 
 	const pkg = requireFromIndex('package.json');
 
+	const generate = requireFromIndex('sources/commands/generate.command');
+
 	t.is(nosgApiFromIndex, nosgApi);
 	t.is(typeof nosgApi, 'object');
 
 	t.is(nosgApi.version, pkg.version);
+
+	t.is(nosgApi.generate, generate);
 });

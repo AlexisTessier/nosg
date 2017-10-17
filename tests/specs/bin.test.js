@@ -18,16 +18,14 @@ test.cb('Basic linking', t => {
 
 	process.argv = argv('node nosg.js #');
 
-	const stderrWrite = sinon.spy(process.stderr, 'write');
+	const write = sinon.stub(process.stderr, 'write').callsFake((...args) => {
+		t.is(args.length, 1);
+		t.is(args[0], `The command "#" is not a command of "nosg".\n`);
 
-	requireFromIndex('bin/nosg');
-
-	setTimeout(()=>{
-		t.true(stderrWrite.calledOnce);
-		t.true(stderrWrite.withArgs(
-			`The command "#" is not a command of "nosg".`
-		).calledOnce);
+		write.restore();
 
 		t.end();
-	}, 2000);
+	});
+
+	requireFromIndex('bin/nosg');
 });

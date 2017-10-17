@@ -4,18 +4,16 @@
 
 const cli = require('../cli');
 
-(()=>{
-	new Promise((resolve, reject)=>{
-		try{
-			cli(process.argv.slice(2)).then(()=>resolve()).catch(err => reject(err));
-		}
-		catch(err){
-			reject(err);
-		}
-	}).then(()=>{
-		process.exitCode = 0;
-	}).catch(err => {
-		process.stderr.write(err.message);
-		process.exitCode = 1;
-	});
-})();
+new Promise((resolve, reject)=>{
+	try{
+		cli(process.argv.slice(2)).then(()=>resolve()).catch(err => reject(err));
+	}
+	catch(err){
+		reject(err);
+	}
+}).then(()=>{
+	process.exitCode = 0;
+}).catch(err => {
+	process.stderr.write(`${err.message}\n`);
+	process.exitCode = 1;
+});
