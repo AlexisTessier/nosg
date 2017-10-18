@@ -1,3 +1,4 @@
 index: sources/nosg
 api: sources/nosg-api
 cli: sources/nosg-cli
+get-generate-instance: sources/get-generate-instance

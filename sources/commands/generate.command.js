@@ -1,5 +1,11 @@
 'use strict';
 
+const msg = require('@alexistessier/msg');
+
+const log = require('../tools/log');
+
+const getGenerateInstance = require('../get-generate-instance');
+
 /**
  * @name generate
  *
@@ -12,12 +18,17 @@
  */
 function generateCommand({
 	generator,
-	options,
+	options = {},
 	sourcesDirectory,
 	stdout,
 	cli
 }) {
-	log(stdout, `${cli.name} generate will run the generator ${generator} with the options ${JSON.stringify(options, '  ')}`)
+	log(stdout, msg(
+		`${cli.name} generate will run the generator "${generator.name}"`,
+		`with the options ${JSON.stringify(options, '  ')}`
+	));
+
+	generator(getGenerateInstance(), options);
 }
 
 module.exports = generateCommand;

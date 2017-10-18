@@ -5,10 +5,7 @@ const NOTICE = Symbol();
 const WARN = Symbol();
 
 module.exports = {
-	LOG,
-	NOTICE,
-	WARN,
-	[LOG]: 'LOG',
-	[NOTICE]: 'NOTICE',
-	[WARN]: 'WARN'
+	LOG, [LOG]: 'LOG',
+	NOTICE, [NOTICE]: 'NOTICE',
+	WARN, [WARN]: 'WARN'
 }
