@@ -74,6 +74,7 @@
     "@alexistessier/es-lint-config": "1.6.0",
     "@alexistessier/node-module-starterkit-release-dep": "1.7.3",
     "ava": "0.22.0",
+    "better-assert": "1.0.2",
     "capitalize": "1.0.0",
     "concurrently": "3.5.0",
     "coveralls": "3.0.0",
@@ -84,6 +85,7 @@
     "git-repo-info": "1.4.1",
     "github-markdown-css": "2.9.0",
     "glob": "7.1.2",
+    "is-directory": "0.3.1",
     "jsonfile": "4.0.0",
     "mkdirp": "0.5.1",
     "mustache": "2.3.0",
@@ -91,11 +93,13 @@
     "nyc": "11.2.1",
     "oss-license-name-to-url": "1.2.1",
     "read-yaml": "1.1.0",
+    "recursive-copy": "2.0.6",
     "remarkable": "1.7.1",
     "serve-here": "3.2.0",
     "shelljs": "0.7.8",
     "sinon": "4.0.1",
-    "string-argv": "0.0.2"
+    "string-argv": "0.0.2",
+    "temp": "0.8.3"
   },
   "ava": {
     "source": [

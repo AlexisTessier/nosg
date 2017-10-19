@@ -7,7 +7,7 @@ const log = require('../tools/log');
 const getGenerateInstance = require('../get-generate-instance');
 
 /**
- * @name generate
+ * @name run-generator
  *
  * @description Run a generator and save the generated files
  *
@@ -16,10 +16,12 @@ const getGenerateInstance = require('../get-generate-instance');
  *
  * @returns {Promise} A promise which resolve when all the generator ends to generate files.
  */
-function generateCommand({
+function runGeneratorCommand({
 	generator,
 	options = {},
 	sourcesDirectory,
+	timeout = 10000,
+	generate = getGenerateInstance(),
 	stdout,
 	cli
 }) {
@@ -28,7 +30,14 @@ function generateCommand({
 		`with the options ${JSON.stringify(options, '  ')}`
 	));
 
-	generator(getGenerateInstance(), options);
+	generate.on('finish', (...args) => {
+		//console.log('------')
+		//console.log(args)
+	});
+
+	generator(generate, options);
+
+	return new Promise();
 }
 
-module.exports = generateCommand;
+module.exports = runGeneratorCommand;

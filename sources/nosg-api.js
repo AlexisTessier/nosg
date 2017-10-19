@@ -4,7 +4,7 @@ const pkg = require('../package.json');
 
 const API = {
 	version: pkg.version,
-	generate: require('./commands/generate.command')
+	runGenerator: require('./commands/run-generator.command')
 }
 
 module.exports = API;

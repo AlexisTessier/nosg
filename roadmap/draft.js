@@ -1,5 +1,5 @@
-// nosg generate --generator='' --options="{name: hello}"
-// nosg create:component
+// nosg run-generator --generator='' --options="{name: hello, outputDirectory: out/path}" --sourcesDirectory=""
+// nosg create:component --layout --name --outputDirectory --sourcesDirectory=""
 // nosg build:layer
 // nosg watch
 

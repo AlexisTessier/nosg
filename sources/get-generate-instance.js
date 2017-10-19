@@ -1,6 +1,8 @@
 'use strict';
 
-const instance = () => null;
+const generate = require('files-generator');
+
+const instance = generate();
 
 function getGenerateInstance(){
 	return instance;

@@ -10,15 +10,17 @@ const requireFromIndex = require('../../utils/require-from-index');
 const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
 
 test('Type', t => {
-	const generate = requireFromIndex('sources/commands/generate.command');
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
-	t.is(typeof generate, 'function');
+	t.is(typeof runGenerator, 'function');
 });
 
-test.cb('generate with a function as generator - call the generator passing a generate function and options', t => {
-	const generateCommand = requireFromIndex('sources/commands/generate.command');
+test.cb.skip('generate with a function as generator - call the generator passing a generate function and options', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
 	const stdoutBuffer = [];
+
+	t.plan(7);
 
 	function generator(generate, options){
 		t.is(Object.keys(options).length, 0);
@@ -38,15 +40,25 @@ test.cb('generate with a function as generator - call the generator passing a ge
 			`run the generator "generator" with the options {}`
 		)+nl);
 
-		t.end();
+		generate();
 	}
 
-	generateCommand({
+	const runGeneratorPromise = runGenerator({
 		generator,
 		stdout: mockWritableStream(stdoutBuffer),
 		cli: { name: 'nosg-test-name' }
 	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+
+	runGeneratorPromise.then(()=>{
+		t.end();
+	});
 });
+
+test.todo('timeout option - error if generator never calls the generate function');
+test.todo('error if generator calls the generate function twice or more');
+
 test.todo('generate with a absolute Javascript Value Locator as generator');
 test.todo('generate with a relative Javascript Value Locator as generator');
 
