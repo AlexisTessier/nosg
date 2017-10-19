@@ -17,6 +17,7 @@ test('Type', t => {
 
 test.cb('generate with a function as generator - call the generator passing a generate function and options', t => {
 	const generateCommand = requireFromIndex('sources/commands/generate.command');
+	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
 	const stdoutBuffer = [];
 
 	function generator(generate, options){
@@ -28,7 +29,7 @@ test.cb('generate with a function as generator - call the generator passing a ge
 		} = options;
 
 		t.is(arguments.length, 2);
-		t.is(typeof generate, 'function');
+		t.is(generate, getGenerateInstance());
 		t.is(optionOne, 'optionOneDefaultValue');
 		t.is(optionTwo, 'optionTwoDefaultValue');
 
@@ -65,5 +66,3 @@ test.todo('generate with a generator name as generator and overriding sourcesDir
 test.todo('generate wrong arguments errors handling');
 
 /*---------------*/
-
-test.todo('Create a generator using the generate function passed to the generator');

@@ -1,7 +1,9 @@
 'use strict';
 
+const instance = () => null;
+
 function getGenerateInstance(){
-	return () => null
+	return instance;
 }
 
 module.exports = getGenerateInstance;
