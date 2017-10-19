@@ -15,12 +15,14 @@ test('Type', t => {
 	t.is(typeof runGenerator, 'function');
 });
 
-test.cb.skip('generate with a function as generator - call the generator passing a generate function and options', t => {
+test.cb('generate with a function as generator - call the generator passing a generate function and options', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
 	const stdoutBuffer = [];
 
-	t.plan(7);
+	t.plan(8);
+
+	let generateCalled = false;
 
 	function generator(generate, options){
 		t.is(Object.keys(options).length, 0);
@@ -40,7 +42,10 @@ test.cb.skip('generate with a function as generator - call the generator passing
 			`run the generator "generator" with the options {}`
 		)+nl);
 
-		generate();
+		setTimeout(() => {
+			generate();
+			generateCalled = true;
+		}, 20);
 	}
 
 	const runGeneratorPromise = runGenerator({
@@ -52,9 +57,16 @@ test.cb.skip('generate with a function as generator - call the generator passing
 	t.true(runGeneratorPromise instanceof Promise);
 
 	runGeneratorPromise.then(()=>{
+		t.true(generateCalled);
 		t.end();
 	});
 });
+
+test.cb.todo('concurent calls');
+
+
+test.todo('generate with a function as generator - generate synchronous call');
+
 
 test.todo('timeout option - error if generator never calls the generate function');
 test.todo('error if generator calls the generate function twice or more');
