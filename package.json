@@ -118,7 +118,7 @@
   "dependencies": {
     "@alexistessier/msg": "1.0.1",
     "cleanquirer": "0.1.0",
-    "files-generator": "0.3.2",
+    "files-generator": "0.3.4",
     "is-stream": "1.1.0"
   }
 }
