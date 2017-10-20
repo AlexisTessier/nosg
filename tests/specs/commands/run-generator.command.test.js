@@ -2,6 +2,8 @@
 
 const test = require('ava');
 
+const sinon = require('sinon');
+
 const msg = require('@alexistessier/msg');
 const nl = '\n';
 
@@ -15,7 +17,7 @@ test('Type', t => {
 	t.is(typeof runGenerator, 'function');
 });
 
-test.cb('generate with a function as generator - call the generator passing a generate function and options', t => {
+test.cb.skip('generate with a function as generator - call the generator passing a generate function and options', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
 	const stdoutBuffer = [];
@@ -62,8 +64,119 @@ test.cb('generate with a function as generator - call the generator passing a ge
 	});
 });
 
-test.cb.todo('concurent calls');
+test.cb.skip('concurent calls - unique generate instance management - the finish event from one runGenerator call should not cause the finish event of an other runGenerator call', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
+	const oneTimeout = 10;
+	const oneTwoDelay = 20;
+	const twoTimeout = oneTimeout+oneTwoDelay;
+
+	t.plan(1);
+
+	Promise.all([
+		runGenerator({
+			generator(generate){
+				setTimeout(()=>generate(), oneTimeout);
+			},
+			stdout: mockWritableStream(),
+			cli: { name: 'nosg' }
+		}).then(()=>Promise.resolve(Date.now())),
+		runGenerator({
+			generator(generate){
+				setTimeout(()=>generate(), twoTimeout);
+			},
+			stdout: mockWritableStream(),
+			cli: { name: 'nosg' }
+		}).then(()=>Promise.resolve(Date.now()))
+	]).then(([runOne, runTwo]) => {
+		t.true(runTwo - runOne >= oneTwoDelay);
+
+		t.end();
+	});
+});
+
+test.cb('must bind only one finish event from generate', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const onArgs = [];
+	const offArgs = [];
+
+	const generateInstance = Object.assign(()=>onArgs.forEach(onArg => {
+		if (onArg.event === 'finish') {
+			const inOffArgs = offArgs.filter(
+				offArg => offArg.event === 'finish'
+			).filter(
+				offArg => offArg.handler === onArg.handler
+			).length > 0;
+
+			if (!inOffArgs) {
+				onArg.handler();
+			}
+		}
+	}), {
+		on(event, handler){
+			onArgs.push({event, handler});
+		},
+		off(event, handler){
+			offArgs.push({event, handler});
+		}
+	})
+
+	runGenerator({
+		cli: { name: 'cli-name' },
+		stdout: mockWritableStream(),
+		generate: generateInstance,
+		generator(generate){
+			t.is(onArgs.length, 1);
+
+			const onEvent = onArgs[0].event;
+			const onHandler = onArgs[0].handler;
+
+			t.is(onEvent, 'finish');
+			t.is(typeof onHandler, 'function');
+			
+			t.is(offArgs.length, 0);
+
+			generate();
+
+			t.is(onArgs.length, 1);
+
+			const onEvent2 = onArgs[0].event;
+			const onHandler2 = onArgs[0].handler;
+
+			t.is(onEvent2, onEvent);
+			t.is(onHandler2, onHandler);
+
+			t.is(offArgs.length, 1);
+
+			const offEvent = offArgs[0].event;
+			const offHandler = offArgs[0].handler;
+
+			t.is(offEvent, onEvent);
+			t.is(offHandler, onHandler);
+
+			generateInstance();
+
+			t.is(onArgs.length, 1);
+
+			const onEvent3 = onArgs[0].event;
+			const onHandler3 = onArgs[0].handler;
+
+			t.is(onEvent3, onEvent);
+			t.is(onHandler3, onHandler);
+
+			t.is(offArgs.length, 1);
+
+			const offEvent2 = offArgs[0].event;
+			const offHandler2 = offArgs[0].handler;
+
+			t.is(offEvent2, onEvent);
+			t.is(offHandler2, onHandler);
+
+			t.end();
+		}
+	});
+});
 
 test.todo('generate with a function as generator - generate synchronous call');
 

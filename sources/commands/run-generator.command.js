@@ -30,13 +30,17 @@ function runGeneratorCommand({
 		`with the options ${JSON.stringify(options, '  ')}`
 	));
 
+	const promise = new Promise(resolve => {
+		const resolver = () => {
+			generate.off('finish', resolver);
+			resolve();
+		};
+		generate.on('finish', resolver);
+	});
+
 	generator(generate, options);
 
-	return new Promise(resolve => {
-		generate.on('finish', () => {
-			resolve();
-		});
-	});
+	return promise;
 }
 
 module.exports = runGeneratorCommand;
