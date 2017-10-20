@@ -20,5 +20,6 @@ function log(stdout, message, logLevel = logsLevels.LOG) {
 
 log.notice = (stdout, message) => log(stdout, message, logsLevels.NOTICE);
 log.warn = (stdout, message) => log(stdout, message, logsLevels.WARN);
+log.success = (stdout, message) => log(stdout, message, logsLevels.SUCCESS);
 
 module.exports = log;

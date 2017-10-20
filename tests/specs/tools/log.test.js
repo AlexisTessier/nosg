@@ -12,6 +12,7 @@ test('Type', t => {
 	t.is(typeof log, 'function');
 	t.is(typeof log.notice, 'function');
 	t.is(typeof log.warn, 'function');
+	t.is(typeof log.success, 'function');
 });
 
 test('log usage default logLevel', t => {
@@ -57,6 +58,17 @@ test('log usage logLevel WARN', t => {
 	t.deepEqual(buffer.join(''), 'WARN: message\n');
 });
 
+test('log usage logLevel SUCCESS', t => {
+	const log = requireFromIndex('sources/tools/log');
+	const { SUCCESS } = requireFromIndex('sources/settings/logs-levels');
+
+	const buffer = [];
+
+	log(mockWritableStream(buffer), 'message', SUCCESS);
+
+	t.deepEqual(buffer.join(''), 'SUCCESS: message\n');
+});
+
 test('log.notice usage', t => {
 	const log = requireFromIndex('sources/tools/log');
 
@@ -75,6 +87,16 @@ test('log.warn usage', t => {
 	log.warn(mockWritableStream(buffer), 'warn message');
 
 	t.deepEqual(buffer.join(''), 'WARN: warn message\n');
+});
+
+test('log.success usage', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	const buffer = [];
+
+	log.success(mockWritableStream(buffer), 'success message');
+
+	t.deepEqual(buffer.join(''), 'SUCCESS: success message\n');
 });
 
 /*-----------*/
@@ -104,6 +126,16 @@ test('log.warn unvalid stdout parameter', t => {
 
 	const err = t.throws(() => {
 		log.warn(mockReadableStream());
+	});
+
+	t.is(err.message, 'stdout must be a writable stream');
+});
+
+test('log.success unvalid stdout parameter', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	const err = t.throws(() => {
+		log.success(mockReadableStream());
 	});
 
 	t.is(err.message, 'stdout must be a writable stream');
@@ -139,6 +171,16 @@ test('log.warn unvalid message parameter', t => {
 	t.is(err.message, 'message must be a string');
 });
 
+test('log.success unvalid message parameter', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	const err = t.throws(() => {
+		log.success(mockWritableStream(), ()=>{return;});
+	});
+
+	t.is(err.message, 'message must be a string');
+});
+
 test('log unvalid logLevel parameter - "LOG"', t => {
 	const log = requireFromIndex('sources/tools/log');
 
@@ -146,7 +188,7 @@ test('log unvalid logLevel parameter - "LOG"', t => {
 		log(mockWritableStream(), 'log message', 'LOG');
 	});
 
-	t.is(err.message, 'logLevel must be one of those following level: LOG, NOTICE, WARN');
+	t.is(err.message, 'logLevel must be one of those following level: LOG, NOTICE, WARN, SUCCESS');
 });
 
 test('log unvalid logLevel parameter - "WARN"', t => {
@@ -156,7 +198,7 @@ test('log unvalid logLevel parameter - "WARN"', t => {
 		log(mockWritableStream(), 'log message', 'WARN');
 	});
 
-	t.is(err.message, 'logLevel must be one of those following level: LOG, NOTICE, WARN');
+	t.is(err.message, 'logLevel must be one of those following level: LOG, NOTICE, WARN, SUCCESS');
 });
 
 test('log unvalid logLevel parameter - "NOTICE"', t => {
@@ -166,5 +208,15 @@ test('log unvalid logLevel parameter - "NOTICE"', t => {
 		log(mockWritableStream(), 'log message', 'NOTICE');
 	});
 
-	t.is(err.message, 'logLevel must be one of those following level: LOG, NOTICE, WARN');
+	t.is(err.message, 'logLevel must be one of those following level: LOG, NOTICE, WARN, SUCCESS');
+});
+
+test('log unvalid logLevel parameter - "SUCCESS"', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	const err = t.throws(() => {
+		log(mockWritableStream(), 'log message', 'SUCCESS');
+	});
+
+	t.is(err.message, 'logLevel must be one of those following level: LOG, NOTICE, WARN, SUCCESS');
 });

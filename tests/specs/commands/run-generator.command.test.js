@@ -17,12 +17,12 @@ test('Type', t => {
 	t.is(typeof runGenerator, 'function');
 });
 
-test.cb.skip('generate with a function as generator - call the generator passing a generate function and options', t => {
+test.cb('generate with a function as generator - call the generator passing a generate function and options', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
 	const stdoutBuffer = [];
 
-	t.plan(8);
+	t.plan(9);
 
 	let generateCalled = false;
 
@@ -60,11 +60,53 @@ test.cb.skip('generate with a function as generator - call the generator passing
 
 	runGeneratorPromise.then(()=>{
 		t.true(generateCalled);
+
+		t.is(stdoutBuffer.join(''), msg(
+			`LOG: nosg-test-name generate will`,
+			`run the generator "generator" with the options {}`
+		)+nl+msg(
+			`SUCCESS: nosg-test-name generate correctly`,
+			`runned the generator "generator" with the options {}`
+		)+nl);
+
 		t.end();
 	});
 });
 
-test.cb.skip('concurent calls - unique generate instance management - the finish event from one runGenerator call should not cause the finish event of an other runGenerator call', t => {
+test.cb('generate with a function as generator - generate synchronous call', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
+	const stdoutBuffer = [];
+
+	let generateCalled = false;
+
+	function generatorSync(generate){
+		generate();
+		generateCalled = true;
+	}
+
+	const runGeneratorPromise = runGenerator({
+		generator: generatorSync,
+		stdout: mockWritableStream(stdoutBuffer),
+		cli: { name: 'nosg-test' }
+	});
+
+	runGeneratorPromise.then(()=>{
+		t.true(generateCalled);
+
+		t.is(stdoutBuffer.join(''), msg(
+			`LOG: nosg-test generate will`,
+			`run the generator "generatorSync" with the options {}`
+		)+nl+msg(
+			`SUCCESS: nosg-test generate correctly`,
+			`runned the generator "generatorSync" with the options {}`
+		)+nl);
+
+		t.end();
+	});
+});
+
+test.cb('concurent calls - unique generate instance management - the finish event from one runGenerator call should not cause the finish event of an other runGenerator call', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
 	const oneTimeout = 10;
@@ -178,10 +220,48 @@ test.cb('must bind only one finish event from generate', t => {
 	});
 });
 
-test.todo('generate with a function as generator - generate synchronous call');
+test.cb('timeout option - error if generator never calls the generate function', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	let errorDetected = false;
+
+	t.plan(3);
+
+	setTimeout(()=>{
+		t.false(errorDetected);
+	}, 80);
 
 
-test.todo('timeout option - error if generator never calls the generate function');
+	setTimeout(()=>{
+		t.true(errorDetected);
+		t.end();
+	}, 120);
+
+	(async () => {
+		try{
+			await runGenerator({
+				generator(){ return; },
+				timeout: 100,
+				stdout: mockWritableStream(),
+				cli: { name: 'cli-name' }
+			});
+			t.fail();
+		}
+		catch(notCalledGenerateError){
+			errorDetected = true;
+			t.is(notCalledGenerateError.message, msg(
+				`cli-name run-generator detected an error`,
+				`in the generator "generator". The generator "generator"`,
+				`doesn't have called yet the generate function after a timeout of 100ms.`,
+				`Try to increase the timeout option when using cli-name run-generator,`,
+				`or check that the generator works correctly and actually calls the generate function.`
+			));
+		}
+	})();
+});
+
+test.todo('timeout default value');
+
 test.todo('error if generator calls the generate function twice or more');
 
 test.todo('generate with a absolute Javascript Value Locator as generator');
