@@ -73,6 +73,8 @@ test.cb('generate with a function as generator - call the generator passing a ge
 	});
 });
 
+test.todo('generate instance can be overrided');
+
 test.cb('generate with a function as generator - generate synchronous call', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
@@ -262,7 +264,10 @@ test.cb('timeout option - error if generator never calls the generate function',
 
 test.todo('timeout default value');
 
-test.todo('error if generator calls the generate function twice or more');
+test.todo('handle multiple generate calls in generator');
+
+test.todo('handle asynchronous generate calls in generator - using Promise');
+test.todo('handle asynchronous generate calls in generator - using callback');
 
 test.todo('generate with a absolute Javascript Value Locator as generator');
 test.todo('generate with a relative Javascript Value Locator as generator');
@@ -272,13 +277,13 @@ test.todo('generate with a generator name as generator');
 test.todo('generate with a component path (complete) as generator and overriding sourcesDirectory');
 test.todo('generate with a generator name as generator and overriding sourcesDirectory');
 
-test.todo('generate with a function as generator and passing options');
-test.todo('generate with a Javascript Value Locator as generator and passing options');
+test.todo('generate with a function as generator and no options');
+test.todo('generate with a Javascript Value Locator as generator and no options');
 
-test.todo('generate with a component path (complete) as generator and passing options');
-test.todo('generate with a generator name as generator and passing options');
-test.todo('generate with a component path (complete) as generator and overriding sourcesDirectory and passing options');
-test.todo('generate with a generator name as generator and overriding sourcesDirectory and passing options');
+test.todo('generate with a component path (complete) as generator and no options');
+test.todo('generate with a generator name as generator and no options');
+test.todo('generate with a component path (complete) as generator and overriding sourcesDirectory and no options');
+test.todo('generate with a generator name as generator and overriding sourcesDirectory and no options');
 
 test.todo('generate wrong arguments errors handling');
 
