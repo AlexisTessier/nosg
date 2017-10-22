@@ -13,3 +13,36 @@
 const layer = {
 	createComponentGenerator:createComponentGenerator
 }
+
+//generator name
+view
+
+//component path
+nosg/generators/view
+generators/view
+
+//deep nesting => if more than 3 url fragments
+nosg/generators/view/nested/view/component
+
+sources://source directory
+	main://components set
+	nosg://components set
+		generators://layer
+			generator
+			layer
+			generic
+			asset
+			setting
+			tool
+			view
+			model
+			view-model
+			request
+			action
+			-----
+			data
+			option
+			widget
+			node
+			end-point
+		layers://layer

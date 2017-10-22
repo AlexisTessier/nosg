@@ -10,6 +10,7 @@ const nl = '\n';
 const requireFromIndex = require('../../utils/require-from-index');
 
 const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
+const mockFunction = requireFromIndex('tests/mocks/mock-function');
 
 test('Type', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
@@ -17,12 +18,16 @@ test('Type', t => {
 	t.is(typeof runGenerator, 'function');
 });
 
+/*---------------*/
+/*- Basic usage -*/
+/*---------------*/
+
 test.cb('generate with a function as generator - call the generator passing a generate function and options', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
+	const generateInstance = requireFromIndex('sources/get-generate-instance')();
 	const stdoutBuffer = [];
 
-	t.plan(9);
+	t.plan(12);
 
 	let generateCalled = false;
 
@@ -35,13 +40,18 @@ test.cb('generate with a function as generator - call the generator passing a ge
 		} = options;
 
 		t.is(arguments.length, 2);
-		t.is(generate, getGenerateInstance());
+
+		t.is(typeof generate, 'function');
+		t.is(generate.use, generateInstance.use);
+		t.is(generate.on, generateInstance.on);
+		t.is(generate.off, generateInstance.off);
+
 		t.is(optionOne, 'optionOneDefaultValue');
 		t.is(optionTwo, 'optionTwoDefaultValue');
 
 		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-name generate will`,
-			`run the generator "generator" with the options {}`
+			`LOG: nosg-test-name run-generator will`,
+			`run the generator "generator" with the options {}.`
 		)+nl);
 
 		setTimeout(() => {
@@ -62,18 +72,58 @@ test.cb('generate with a function as generator - call the generator passing a ge
 		t.true(generateCalled);
 
 		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-name generate will`,
-			`run the generator "generator" with the options {}`
+			`LOG: nosg-test-name run-generator will`,
+			`run the generator "generator" with the options {}.`
 		)+nl+msg(
-			`SUCCESS: nosg-test-name generate correctly`,
-			`runned the generator "generator" with the options {}`
+			`SUCCESS: nosg-test-name run-generator correctly`,
+			`runned the generator "generator" with the options {}.`
 		)+nl);
 
 		t.end();
 	});
 });
 
-test.todo('generate instance can be overrided');
+test.todo('runGenerator with a function as generator and no options');
+
+test.cb('generate instance can be overrided', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const generateOverride = mockFunction();
+	generateOverride.on = ()=>{return;}
+
+	runGenerator({
+		generator(generate){
+			t.is(typeof generate, 'function');
+			t.is(generate.on, generateOverride.on);
+
+			generate({filepath:'file content'}, {
+				optionOne: 'value one'
+			}, 'arg3', 'arg4');
+
+			t.true(generateOverride.calledOnce);
+			const callOneArgs = generateOverride.getCall(0).args;
+			t.is(callOneArgs.length, 4);
+			t.deepEqual(callOneArgs[0], {filepath:'file content'});
+
+			t.is(typeof callOneArgs[1], 'object');
+			const optionsKeys = Object.keys(callOneArgs[1]);
+			t.is(optionsKeys.length, 2);
+			t.true(optionsKeys.includes('optionOne'));
+			t.is(callOneArgs[1].optionOne, 'value one');
+
+			t.true(optionsKeys.includes('eventData'));
+			t.is(typeof callOneArgs[1].eventData, 'number');
+
+			t.is(callOneArgs[2], 'arg3');
+			t.is(callOneArgs[3], 'arg4');
+
+			t.end();
+		},
+		generate: generateOverride,
+		stdout: mockWritableStream(),
+		cli: {name: 'cli-name-test'}
+	});
+});
 
 test.cb('generate with a function as generator - generate synchronous call', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
@@ -97,23 +147,27 @@ test.cb('generate with a function as generator - generate synchronous call', t =
 		t.true(generateCalled);
 
 		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test generate will`,
-			`run the generator "generatorSync" with the options {}`
+			`LOG: nosg-test run-generator will`,
+			`run the generator "generatorSync" with the options {}.`
 		)+nl+msg(
-			`SUCCESS: nosg-test generate correctly`,
-			`runned the generator "generatorSync" with the options {}`
+			`SUCCESS: nosg-test run-generator correctly`,
+			`runned the generator "generatorSync" with the options {}.`
 		)+nl);
 
 		t.end();
 	});
 });
 
+/*-----------------------------------------------*/
+/*- Handling usage of an uniq generate instance -*/
+/*-----------------------------------------------*/
+
 test.cb('concurent calls - unique generate instance management - the finish event from one runGenerator call should not cause the finish event of an other runGenerator call', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
 	const oneTimeout = 10;
-	const oneTwoDelay = 20;
-	const twoTimeout = oneTimeout+oneTwoDelay;
+	const oneTwoDelay = 50;
+	const twoTimeout = 100;
 
 	t.plan(1);
 
@@ -145,7 +199,7 @@ test.cb('must bind only one finish event from generate', t => {
 	const onArgs = [];
 	const offArgs = [];
 
-	const generateInstance = Object.assign(()=>onArgs.forEach(onArg => {
+	const generateInstance = Object.assign((generateConfig, options)=>onArgs.forEach(onArg => {
 		if (onArg.event === 'finish') {
 			const inOffArgs = offArgs.filter(
 				offArg => offArg.event === 'finish'
@@ -154,7 +208,9 @@ test.cb('must bind only one finish event from generate', t => {
 			).length > 0;
 
 			if (!inOffArgs) {
-				onArg.handler();
+				onArg.handler({
+					data: options.eventData
+				});
 			}
 		}
 	}), {
@@ -222,6 +278,10 @@ test.cb('must bind only one finish event from generate', t => {
 	});
 });
 
+/*------------------*/
+/*- Timeout option -*/
+/*------------------*/
+
 test.cb('timeout option - error if generator never calls the generate function', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
@@ -262,29 +322,56 @@ test.cb('timeout option - error if generator never calls the generate function',
 	})();
 });
 
+test.todo('timeout option - error if generate never emit finish or error event');
 test.todo('timeout default value');
 
+/*------------------*/
+
 test.todo('handle multiple generate calls in generator');
+
+test.todo('error if trying to override eventData when calling generate');
+test.todo('error if generate emit an error event');
 
 test.todo('handle asynchronous generate calls in generator - using Promise');
 test.todo('handle asynchronous generate calls in generator - using callback');
 
-test.todo('generate with a absolute Javascript Value Locator as generator');
-test.todo('generate with a relative Javascript Value Locator as generator');
+test.todo('runGenerator with an absolute Javascript Value Locator as generator');
+test.todo('runGenerator with an asbolute Javascript Value Locator as generator and no options');
+test.todo('runGenerator with a relative Javascript Value Locator as generator');
+test.todo('runGenerator with a relative Javascript Value Locator as generator and no options');
 
-test.todo('generate with a component path (complete) as generator');
-test.todo('generate with a generator name as generator');
-test.todo('generate with a component path (complete) as generator and overriding sourcesDirectory');
-test.todo('generate with a generator name as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a complete component path as generator');
+test.todo('runGenerator with a complete component path as generator and no options');
+test.todo('runGenerator with a complete component path as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a complete component path as generator and overriding sourcesDirectory and no options');
 
-test.todo('generate with a function as generator and no options');
-test.todo('generate with a Javascript Value Locator as generator and no options');
+test.todo('runGenerator with a partial component path as generator');
+test.todo('runGenerator with a partial component path as generator and no options');
+test.todo('runGenerator with a partial component path as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a partial component path as generator and overriding sourcesDirectory and no options');
 
-test.todo('generate with a component path (complete) as generator and no options');
-test.todo('generate with a generator name as generator and no options');
-test.todo('generate with a component path (complete) as generator and overriding sourcesDirectory and no options');
-test.todo('generate with a generator name as generator and overriding sourcesDirectory and no options');
+test.todo('runGenerator with a nested component path as generator');
+test.todo('runGenerator with a nested component path as generator and no options');
+test.todo('runGenerator with a nested component path as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a nested component path as generator and overriding sourcesDirectory and no options');
 
-test.todo('generate wrong arguments errors handling');
+test.todo('runGenerator with a generator name as generator');
+test.todo('runGenerator with a generator name as generator and no options');
+test.todo('runGenerator with a generator name as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a generator name as generator and overriding sourcesDirectory and no options');
+
+/*---------------*/
+
+test.todo('log enhancement');
+
+/*---------------*/
+
+test.todo('runGenerator with unvalid generator');
+test.todo('runGenerator with unvalid options');
+test.todo('runGenerator with unvalid sourcesDirectory');
+test.todo('runGenerator with unvalid timeout');
+test.todo('runGenerator with unvalid generate instance');
+test.todo('runGenerator with unvalid stdout');
+test.todo('runGenerator with unvalid cli object');
 
 /*---------------*/

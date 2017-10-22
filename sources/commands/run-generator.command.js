@@ -6,6 +6,8 @@ const log = require('../tools/log');
 
 const getGenerateInstance = require('../get-generate-instance');
 
+let runGeneratorCommandCallIdCounter = 0;
+
 /**
  * @name run-generator
  *
@@ -25,6 +27,8 @@ function runGeneratorCommand({
 	stdout,
 	cli
 }) {
+	const callId = (++runGeneratorCommandCallIdCounter);
+
 	const loggableOptions = JSON.stringify(options, '  ');
 	const loggableGenerator = generator.name;
 
@@ -34,10 +38,14 @@ function runGeneratorCommand({
 	));
 
 	let generateCallCount = 0;
-	function generateProxy(...args){
-		generateCallCount++;
-		generate(...args);
-	}
+	const generateProxy = new Proxy(generate, {
+		apply(_generate, context, [generateConfig, options, ...args]){
+			generateCallCount++;
+			_generate.apply(context, [generateConfig, Object.assign({}, options, {
+				eventData: callId
+			}), ...args])
+		}
+	});
 
 	const promise = new Promise((resolve, reject) => {
 		const rejectTimeout = setTimeout(()=>{
@@ -52,16 +60,18 @@ function runGeneratorCommand({
 			}
 		}, timeout);
 
-		const resolver = () => {
-			clearTimeout(rejectTimeout);
-			generate.off('finish', resolver);
+		const resolver = event => {
+			if(event.data === callId){
+				clearTimeout(rejectTimeout);
+				generate.off('finish', resolver);
 
-			log.success(stdout, msg(
-				`${cli.name} run-generator correctly runned the generator "${loggableGenerator}"`,
-				`with the options ${loggableOptions}.`
-			));
+				log.success(stdout, msg(
+					`${cli.name} run-generator correctly runned the generator "${loggableGenerator}"`,
+					`with the options ${loggableOptions}.`
+				));
 
-			resolve();
+				resolve();
+			}
 		};
 		generate.on('finish', resolver);
 	});
