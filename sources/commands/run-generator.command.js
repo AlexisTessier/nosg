@@ -1,10 +1,13 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
+const generateGenerate = require('files-generator');
+
 const msg = require('@alexistessier/msg');
 
 const log = require('../tools/log');
-
-const generateGenerate = require('files-generator');
 
 /**
  * @name run-generator
@@ -23,7 +26,7 @@ const generateGenerate = require('files-generator');
 function runGeneratorCommand({
 	generator,
 	options = {},
-	sourcesDirectory,
+	sourcesDirectory = 'sources',
 	timeout = 10000,
 	generate = generateGenerate(),
 	stdout,
@@ -31,6 +34,37 @@ function runGeneratorCommand({
 }) {
 	const loggableOptions = JSON.stringify(options);
 	const loggableGenerator = generator.name;
+
+	const sourcesDirectoryArg = sourcesDirectory;
+	const useAbsoluteSourcesDirectory = path.isAbsolute(sourcesDirectory);
+
+	sourcesDirectory = useAbsoluteSourcesDirectory ? sourcesDirectory : path.join(process.cwd(), sourcesDirectory);
+
+	try{
+		if(!fs.lstatSync(sourcesDirectory).isDirectory()){
+
+		}
+	}
+	catch(err){
+		if(err.code == 'ENOENT'){
+			if (useAbsoluteSourcesDirectory) {
+				throw new Error(msg(
+					`"${sourcesDirectory}" is not a valid sources directory path.`,
+					`The directory doesn't seem to exist.`
+				));
+			}
+
+			throw new Error(msg(
+				`"${sourcesDirectoryArg}" is not a valid sources directory path.`,
+				`The directory doesn't seem to exist. Ensure that you are running the`,
+				`run-generator command in an appropriate current working directory.`
+			));
+		}
+		else{
+			throw err;
+		}
+	}
+
 
 	log(stdout, msg(
 		`${cli.name} run-generator will run the generator "${loggableGenerator}"`,
@@ -72,7 +106,9 @@ function runGeneratorCommand({
 		generate.on('finish', resolver);
 	});
 
-	generator(generateProxy, options);
+	generator(generateProxy, Object.assign({
+		sourcesDirectory
+	}, options));
 
 	return promise;
 }

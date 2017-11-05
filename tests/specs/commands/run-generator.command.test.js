@@ -4,9 +4,12 @@ const test = require('ava');
 
 const sinon = require('sinon');
 
+const path = require('path');
+
 const msg = require('@alexistessier/msg');
 const nl = '\n';
 
+const pathFromIndex = require('../../utils/path-from-index');
 const requireFromIndex = require('../../utils/require-from-index');
 
 const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
@@ -257,7 +260,7 @@ test.cb('function as generator - generator is called with no options by default'
 	function generator(generate, options){
 		t.is(arguments.length, 2);
 		t.is(typeof options, 'object');
-		t.is(Object.keys(options).length, 0);
+		t.is(Object.keys(options).length, 1);
 
 		const {
 			optionOne = 'optionOneDefaultValue',
@@ -291,7 +294,7 @@ test.cb('function as generator - generator is called with options if provided', 
 	function generator(generate, options){
 		t.is(arguments.length, 2);
 		t.is(typeof options, 'object');
-		t.is(Object.keys(options).length, 2);
+		t.is(Object.keys(options).length, 3);
 
 		const {
 			optionOne = 'optionOneDefaultValue',
@@ -321,6 +324,212 @@ test.cb('function as generator - generator is called with options if provided', 
 
 	t.true(runGeneratorPromise instanceof Promise);
 });
+
+/*---------------------------*/
+/*- sourcesDirectory option -*/
+/*---------------------------*/
+
+test.cb('sourcesDirectory default value is accessible in the generator via the options object', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const runGeneratorPromise = runGenerator({
+		generator(generate, options){
+			t.is(arguments.length, 2);
+			t.is(typeof options, 'object');
+			t.is(Object.keys(options).length, 2);
+
+			t.is(options.one, 42);
+			t.is(options.sourcesDirectory, path.join(process.cwd(), 'sources'));
+
+			t.end();
+		},
+		options: {
+			one: 42
+		},
+		stdout: mockWritableStream(),
+		cli: { name: 'nosg-test' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+test.cb('sourcesDirectory (absolute one) option is accessible in the generator via the options object', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const absolutePath = pathFromIndex('tests/mocks/sources-directory');
+
+	const runGeneratorPromise = runGenerator({
+		sourcesDirectory: absolutePath,
+		generator(generate, options){
+			t.is(arguments.length, 2);
+			t.is(typeof options, 'object');
+			t.is(Object.keys(options).length, 2);
+
+			t.is(options.one, 43);
+			t.is(options.sourcesDirectory, absolutePath);
+
+			t.end();
+		},
+		options: {
+			one: 43
+		},
+		stdout: mockWritableStream(),
+		cli: { name: 'nosg-test' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+test.cb('sourcesDirectory (relative one) option is accessible in the generator via the options object', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const runGeneratorPromise = runGenerator({
+		sourcesDirectory: 'tests/mocks/sources-directory',
+		generator(generate, options){
+			t.is(arguments.length, 2);
+			t.is(typeof options, 'object');
+			t.is(Object.keys(options).length, 2);
+
+			t.is(options.one, 44);
+			t.is(options.sourcesDirectory, path.join(process.cwd(), 'tests/mocks/sources-directory'));
+
+			t.end();
+		},
+		options: {
+			one: 44
+		},
+		stdout: mockWritableStream(),
+		cli: { name: 'nosg-test' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+test.cb('sourcesDirectory default value can be overrided using the options option', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const runGeneratorPromise = runGenerator({
+		generator(generate, options){
+			t.is(arguments.length, 2);
+			t.is(typeof options, 'object');
+			t.is(Object.keys(options).length, 2);
+
+			t.is(options.one, 'test value');
+			t.is(options.sourcesDirectory, 'overriding default value');
+
+			t.end();
+		},
+		options: {
+			one: 'test value',
+			sourcesDirectory: 'overriding default value'
+		},
+		stdout: mockWritableStream(),
+		cli: { name: 'nosg-test' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+test.cb('sourcesDirectory absolute path value can be overrided using the options option', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const runGeneratorPromise = runGenerator({
+		sourcesDirectory: pathFromIndex('tests/mocks/sources-directory'),
+		generator(generate, options){
+			t.is(arguments.length, 2);
+			t.is(typeof options, 'object');
+			t.is(Object.keys(options).length, 2);
+
+			t.is(options.one, 'test value');
+			t.is(options.sourcesDirectory, 'overriding absolute path value');
+
+			t.end();
+		},
+		options: {
+			one: 'test value',
+			sourcesDirectory: 'overriding absolute path value'
+		},
+		stdout: mockWritableStream(),
+		cli: { name: 'nosg-test' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+test.cb('sourcesDirectory relative path value can be overrided using the options option', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const runGeneratorPromise = runGenerator({
+		sourcesDirectory: 'tests/mocks/sources-directory',
+		generator(generate, options){
+			t.is(arguments.length, 2);
+			t.is(typeof options, 'object');
+			t.is(Object.keys(options).length, 2);
+
+			t.is(options.one, 'test value 2');
+			t.is(options.sourcesDirectory, 'overriding relative path value');
+
+			t.end();
+		},
+		options: {
+			one: 'test value 2',
+			sourcesDirectory: 'overriding relative path value'
+		},
+		stdout: mockWritableStream(),
+		cli: { name: 'nosg-test' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+test('Trying to use an unexistent absolute sourcesDirectory must throw error', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const unexistentAbsolutePath = pathFromIndex('tests/mocks/unexistent/sources/directory/path');
+
+	const unexistentAbsolutePathError = t.throws(() => {
+		runGenerator({
+			sourcesDirectory: unexistentAbsolutePath,
+			generator(){
+				t.fail();
+			},
+			stdout: mockWritableStream(),
+			cli: { name: 'nosg-test' }
+		});
+	});
+
+	t.is(unexistentAbsolutePathError.message, msg(
+		`"${unexistentAbsolutePath}" is not a valid sources directory path.`,
+		`The directory doesn't seem to exist.`
+	));
+});
+
+test('Trying to use an unexistent relative sourcesDirectory must throw error', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const unexistentRelativePath = 'tests/mocks/unexistent/sources/directory/path';
+
+	const unexistentRelativePathError = t.throws(() => {
+		runGenerator({
+			sourcesDirectory: unexistentRelativePath,
+			generator(){
+				t.fail();
+			},
+			stdout: mockWritableStream(),
+			cli: { name: 'nosg-test' }
+		});
+	});
+
+	t.is(unexistentRelativePathError.message, msg(
+		`"${unexistentRelativePath}" is not a valid sources directory path.`,
+		`The directory doesn't seem to exist. Ensure that you are running the run-generator`,
+		`command in an appropriate current working directory.`
+	));
+});
+
+test.todo('Trying to use an absolute path to a non directory sourcesDirectory must throw error');
+
+test.todo('Trying to use a relative path to a non directory sourcesDirectory must throw error');
 
 /*------------------*/
 /*- Timeout option -*/
@@ -371,42 +580,41 @@ test.todo('timeout default value');
 
 /*------------------*/
 
-test.todo('handle multiple generate calls in generator');
-
-test.todo('error if trying to override eventData when calling generate');
-test.todo('error if generate emit an error event');
-
-test.todo('handle asynchronous generate calls in generator - using Promise');
-test.todo('handle asynchronous generate calls in generator - using callback');
-
-test.todo('runGenerator with an absolute Javascript Value Locator as generator');
-test.todo('runGenerator with an asbolute Javascript Value Locator as generator and no options');
-test.todo('runGenerator with a relative Javascript Value Locator as generator');
-test.todo('runGenerator with a relative Javascript Value Locator as generator and no options');
-
 test.todo('runGenerator with a complete component path as generator');
-test.todo('runGenerator with a complete component path as generator and no options');
+test.todo('runGenerator with a complete component path as generator and options');
 test.todo('runGenerator with a complete component path as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a complete component path as generator and overriding sourcesDirectory and no options');
+test.todo('runGenerator with a complete component path as generator and overriding sourcesDirectory and options');
 
-test.todo('runGenerator with a partial component path as generator');
-test.todo('runGenerator with a partial component path as generator and no options');
-test.todo('runGenerator with a partial component path as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a partial component path as generator and overriding sourcesDirectory and no options');
+test.todo('runGenerator with a layer/component path as generator');
+test.todo('runGenerator with a layer/component path as generator and options');
+test.todo('runGenerator with a layer/component path as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a layer/component path as generator and overriding sourcesDirectory and options');
+
+test.todo('runGenerator with a set:component path as generator');
+test.todo('runGenerator with a set:component path as generator and options');
+test.todo('runGenerator with a set:component path as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a set:component path as generator and overriding sourcesDirectory and options');
+
+test.todo('runGenerator with a component name as generator');
+test.todo('runGenerator with a component name as generator and options');
+test.todo('runGenerator with a component name as generator and overriding sourcesDirectory');
+test.todo('runGenerator with a component name as generator and overriding sourcesDirectory and options');
 
 test.todo('runGenerator with a nested component path as generator');
-test.todo('runGenerator with a nested component path as generator and no options');
+test.todo('runGenerator with a nested component path as generator and options');
 test.todo('runGenerator with a nested component path as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a nested component path as generator and overriding sourcesDirectory and no options');
+test.todo('runGenerator with a nested component path as generator and overriding sourcesDirectory and options');
 
-test.todo('runGenerator with a generator name as generator');
-test.todo('runGenerator with a generator name as generator and no options');
-test.todo('runGenerator with a generator name as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a generator name as generator and overriding sourcesDirectory and no options');
+test.todo('runGenerator with an absolute Javascript Value Locator as generator');
+test.todo('runGenerator with an asbolute Javascript Value Locator as generator and options');
+test.todo('runGenerator with a relative Javascript Value Locator as generator');
+test.todo('runGenerator with a relative Javascript Value Locator as generator and options');
 
 /*---------------*/
 
-test.todo('log enhancement');
+test.todo('display the created files when finished');
+
+test.todo('error if generate emit an error event');
 
 /*---------------*/
 
@@ -419,3 +627,19 @@ test.todo('runGenerator with unvalid stdout');
 test.todo('runGenerator with unvalid cli object');
 
 /*---------------*/
+
+test.todo('handle asynchronous generate calls in generator - using Promise');
+
+test.todo('handle asynchronous generate calls in generator - using callback');
+
+test.todo('handle multiple generate calls in generator');
+
+test.todo('log enhancement');
+
+/*---------------*/
+
+/*----------------------*/
+/*- File creation test -*/
+/*----------------------*/
+
+test.todo('test with actual file creation');
