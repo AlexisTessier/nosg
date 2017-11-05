@@ -22,42 +22,24 @@ test('Type', t => {
 /*- Basic usage -*/
 /*---------------*/
 
-test.cb('generate with a function as generator - call the generator passing a generate function and options', t => {
+test.cb('function as generator - generator is called with a generate function', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-	const generateInstance = requireFromIndex('sources/get-generate-instance')();
 	const stdoutBuffer = [];
 
-	t.plan(12);
-
-	let generateCalled = false;
-
-	function generator(generate, options){
-		t.is(Object.keys(options).length, 0);
-
-		const {
-			optionOne = 'optionOneDefaultValue',
-			optionTwo = 'optionTwoDefaultValue'
-		} = options;
-
+	function generator(generate){
 		t.is(arguments.length, 2);
 
 		t.is(typeof generate, 'function');
-		t.is(generate.use, generateInstance.use);
-		t.is(generate.on, generateInstance.on);
-		t.is(generate.off, generateInstance.off);
-
-		t.is(optionOne, 'optionOneDefaultValue');
-		t.is(optionTwo, 'optionTwoDefaultValue');
+		t.is(typeof generate.use, 'function');
+		t.is(typeof generate.on, 'function');
+		t.is(typeof generate.off, 'function');
 
 		t.is(stdoutBuffer.join(''), msg(
 			`LOG: nosg-test-name run-generator will`,
 			`run the generator "generator" with the options {}.`
 		)+nl);
 
-		setTimeout(() => {
-			generate();
-			generateCalled = true;
-		}, 20);
+		t.end();
 	}
 
 	const runGeneratorPromise = runGenerator({
@@ -67,31 +49,15 @@ test.cb('generate with a function as generator - call the generator passing a ge
 	});
 
 	t.true(runGeneratorPromise instanceof Promise);
-
-	runGeneratorPromise.then(()=>{
-		t.true(generateCalled);
-
-		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-name run-generator will`,
-			`run the generator "generator" with the options {}.`
-		)+nl+msg(
-			`SUCCESS: nosg-test-name run-generator correctly`,
-			`runned the generator "generator" with the options {}.`
-		)+nl);
-
-		t.end();
-	});
 });
 
-test.todo('runGenerator with a function as generator and no options');
-
-test.cb('generate instance can be overrided', t => {
+test.cb('function as generator - generate instance can be overrided', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
 	const generateOverride = mockFunction();
 	generateOverride.on = ()=>{return;}
 
-	runGenerator({
+	const runGeneratorPromise = runGenerator({
 		generator(generate){
 			t.is(typeof generate, 'function');
 			t.is(generate.on, generateOverride.on);
@@ -107,12 +73,12 @@ test.cb('generate instance can be overrided', t => {
 
 			t.is(typeof callOneArgs[1], 'object');
 			const optionsKeys = Object.keys(callOneArgs[1]);
-			t.is(optionsKeys.length, 2);
+
+			t.is(optionsKeys.length, 1);
 			t.true(optionsKeys.includes('optionOne'));
 			t.is(callOneArgs[1].optionOne, 'value one');
 
-			t.true(optionsKeys.includes('eventData'));
-			t.is(typeof callOneArgs[1].eventData, 'number');
+			t.is(callOneArgs[1].eventData, undefined);
 
 			t.is(callOneArgs[2], 'arg3');
 			t.is(callOneArgs[3], 'arg4');
@@ -123,11 +89,12 @@ test.cb('generate instance can be overrided', t => {
 		stdout: mockWritableStream(),
 		cli: {name: 'cli-name-test'}
 	});
+
+	t.true(runGeneratorPromise instanceof Promise);
 });
 
-test.cb('generate with a function as generator - generate synchronous call', t => {
+test.cb('function as generator - generate synchronous call', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-	const getGenerateInstance = requireFromIndex('sources/get-generate-instance');
 	const stdoutBuffer = [];
 
 	let generateCalled = false;
@@ -158,36 +125,35 @@ test.cb('generate with a function as generator - generate synchronous call', t =
 	});
 });
 
-/*-----------------------------------------------*/
-/*- Handling usage of an uniq generate instance -*/
-/*-----------------------------------------------*/
-
-test.cb('concurent calls - unique generate instance management - the finish event from one runGenerator call should not cause the finish event of an other runGenerator call', t => {
+test.cb('function as generator - generate asynchronous call', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+	const stdoutBuffer = [];
 
-	const oneTimeout = 10;
-	const oneTwoDelay = 50;
-	const twoTimeout = 100;
+	let generateCalled = false;
 
-	t.plan(1);
+	function generatorAsync(generate){
+		setTimeout(() => {
+			generate();
+			generateCalled = true;
+		}, 20);
+	}
 
-	Promise.all([
-		runGenerator({
-			generator(generate){
-				setTimeout(()=>generate(), oneTimeout);
-			},
-			stdout: mockWritableStream(),
-			cli: { name: 'nosg' }
-		}).then(()=>Promise.resolve(Date.now())),
-		runGenerator({
-			generator(generate){
-				setTimeout(()=>generate(), twoTimeout);
-			},
-			stdout: mockWritableStream(),
-			cli: { name: 'nosg' }
-		}).then(()=>Promise.resolve(Date.now()))
-	]).then(([runOne, runTwo]) => {
-		t.true(runTwo - runOne >= oneTwoDelay);
+	const runGeneratorPromise = runGenerator({
+		generator: generatorAsync,
+		stdout: mockWritableStream(stdoutBuffer),
+		cli: { name: 'nosg-test-async' }
+	});
+
+	runGeneratorPromise.then(()=>{
+		t.true(generateCalled);
+
+		t.is(stdoutBuffer.join(''), msg(
+			`LOG: nosg-test-async run-generator will`,
+			`run the generator "generatorAsync" with the options {}.`
+		)+nl+msg(
+			`SUCCESS: nosg-test-async run-generator correctly`,
+			`runned the generator "generatorAsync" with the options {}.`
+		)+nl);
 
 		t.end();
 	});
@@ -209,7 +175,9 @@ test.cb('must bind only one finish event from generate', t => {
 
 			if (!inOffArgs) {
 				onArg.handler({
-					data: options.eventData
+					data: undefined,
+					errors: [],
+					success: []
 				});
 			}
 		}
@@ -279,6 +247,82 @@ test.cb('must bind only one finish event from generate', t => {
 });
 
 /*------------------*/
+/*- options option -*/
+/*------------------*/
+
+test.cb('function as generator - generator is called with no options by default', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+	const stdoutBuffer = [];
+
+	function generator(generate, options){
+		t.is(arguments.length, 2);
+		t.is(typeof options, 'object');
+		t.is(Object.keys(options).length, 0);
+
+		const {
+			optionOne = 'optionOneDefaultValue',
+			optionTwo = 'optionTwoDefaultValue'
+		} = options;
+
+		t.is(optionOne, 'optionOneDefaultValue');
+		t.is(optionTwo, 'optionTwoDefaultValue');
+
+		t.is(stdoutBuffer.join(''), msg(
+			`LOG: nosg-test-defautl-options run-generator will`,
+			`run the generator "generator" with the options {}.`
+		)+nl);
+
+		t.end();
+	}
+
+	const runGeneratorPromise = runGenerator({
+		generator,
+		stdout: mockWritableStream(stdoutBuffer),
+		cli: { name: 'nosg-test-defautl-options' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+test.cb('function as generator - generator is called with options if provided', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+	const stdoutBuffer = [];
+
+	function generator(generate, options){
+		t.is(arguments.length, 2);
+		t.is(typeof options, 'object');
+		t.is(Object.keys(options).length, 2);
+
+		const {
+			optionOne = 'optionOneDefaultValue',
+			optionTwo = 'optionTwoDefaultValue'
+		} = options;
+
+		t.is(optionOne, 'option value 1');
+		t.is(optionTwo, 'option value 2');
+
+		t.is(stdoutBuffer.join(''), msg(
+			`LOG: nosg-test-options run-generator will`,
+			`run the generator "generator" with the options {"optionOne":"option value 1","optionTwo":"option value 2"}.`
+		)+nl);
+
+		t.end();
+	}
+
+	const runGeneratorPromise = runGenerator({
+		generator,
+		options: {
+			optionOne: 'option value 1',
+			optionTwo: 'option value 2'
+		},
+		stdout: mockWritableStream(stdoutBuffer),
+		cli: { name: 'nosg-test-options' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+});
+
+/*------------------*/
 /*- Timeout option -*/
 /*------------------*/
 
@@ -322,7 +366,7 @@ test.cb('timeout option - error if generator never calls the generate function',
 	})();
 });
 
-test.todo('timeout option - error if generate never emit finish or error event');
+test.todo('timeout option - error if generate never emit finish');
 test.todo('timeout default value');
 
 /*------------------*/

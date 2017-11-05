@@ -40,12 +40,16 @@ paragraph content
 
 ### run-generator
 
-Run a generator and save the generated files
+Run a NOSG generator. A NOSG generator is a function which generate files using a generate function.
 
 **Parameters**
 
--   `generator` **([function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function) \| [string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String))** Which generator to use. It can be a function, the name of one nosg generator in the generators layers, or a Javascript Value Locator to a function.
--   `options` **[object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** The options passed to the generator function.
+-   `options` **[object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** An object containing the command options.
+    -   `options.generator` **([function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function) \| [string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String))** The generator to use. It can be a function, the name of one nosg generator in the generators layers, or a Javascript Value Locator to a function.
+    -   `options.options` **[object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** The options passed to the generator function.
+    -   `options.sourcesDirectory` **[object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** The path to the sources directory of the nosg project to use.
+    -   `options.timeout` **[object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** The command timeout. If the command is not terminated after this duration, an error will be thrown.
+    -   `options.generate` **([function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function) \| [string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) | JVL)** The generate function to pass to the generator.
 
 Returns **[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)** A promise which resolve when all the generator ends to generate files.
 

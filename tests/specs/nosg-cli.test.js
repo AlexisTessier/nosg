@@ -18,7 +18,4 @@ test('Type and API', t => {
 	t.is(nosgCli.name, 'nosg');
 });
 
-test.todo('nosg generate')
-test.todo('nosg create')
-test.todo('nosg build')
-test.todo('nosg watch')
+test.todo('nosg run-generator');

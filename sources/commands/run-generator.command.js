@@ -4,17 +4,19 @@ const msg = require('@alexistessier/msg');
 
 const log = require('../tools/log');
 
-const getGenerateInstance = require('../get-generate-instance');
-
-let runGeneratorCommandCallIdCounter = 0;
+const generateGenerate = require('files-generator');
 
 /**
  * @name run-generator
  *
- * @description Run a generator and save the generated files
+ * @description Run a NOSG generator. A NOSG generator is a function which generate files using a generate function.
  *
- * @param {function | string} generator Which generator to use. It can be a function, the name of one nosg generator in the generators layers, or a Javascript Value Locator to a function.
- * @param {object} options The options passed to the generator function.
+ * @param {object} options An object containing the command options.
+ * @param {function | string} options.generator The generator to use. It can be a function, the name of one nosg generator in the generators layers, or a Javascript Value Locator to a function.
+ * @param {object} options.options The options passed to the generator function.
+ * @param {object} options.sourcesDirectory The path to the sources directory of the nosg project to use.
+ * @param {object} options.timeout The command timeout. If the command is not terminated after this duration, an error will be thrown.
+ * @param {function | string | JVL} options.generate The generate function to pass to the generator.
  *
  * @returns {Promise} A promise which resolve when all the generator ends to generate files.
  */
@@ -23,13 +25,11 @@ function runGeneratorCommand({
 	options = {},
 	sourcesDirectory,
 	timeout = 10000,
-	generate = getGenerateInstance(),
+	generate = generateGenerate(),
 	stdout,
 	cli
 }) {
-	const callId = (++runGeneratorCommandCallIdCounter);
-
-	const loggableOptions = JSON.stringify(options, '  ');
+	const loggableOptions = JSON.stringify(options);
 	const loggableGenerator = generator.name;
 
 	log(stdout, msg(
@@ -39,11 +39,9 @@ function runGeneratorCommand({
 
 	let generateCallCount = 0;
 	const generateProxy = new Proxy(generate, {
-		apply(_generate, context, [generateConfig, options, ...args]){
+		apply(_generate, context, args){
 			generateCallCount++;
-			_generate.apply(context, [generateConfig, Object.assign({}, options, {
-				eventData: callId
-			}), ...args])
+			_generate.apply(context, args);
 		}
 	});
 
@@ -61,17 +59,15 @@ function runGeneratorCommand({
 		}, timeout);
 
 		const resolver = event => {
-			if(event.data === callId){
-				clearTimeout(rejectTimeout);
-				generate.off('finish', resolver);
+			clearTimeout(rejectTimeout);
+			generate.off('finish', resolver);
 
-				log.success(stdout, msg(
-					`${cli.name} run-generator correctly runned the generator "${loggableGenerator}"`,
-					`with the options ${loggableOptions}.`
-				));
+			log.success(stdout, msg(
+				`${cli.name} run-generator correctly runned the generator "${loggableGenerator}"`,
+				`with the options ${loggableOptions}.`
+			));
 
-				resolve();
-			}
+			resolve();
 		};
 		generate.on('finish', resolver);
 	});
