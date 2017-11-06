@@ -113,6 +113,8 @@ test.cb('function as generator - generate synchronous call', t => {
 		cli: { name: 'nosg-test' }
 	});
 
+	t.true(runGeneratorPromise instanceof Promise);
+
 	runGeneratorPromise.then(()=>{
 		t.true(generateCalled);
 
@@ -146,6 +148,8 @@ test.cb('function as generator - generate asynchronous call', t => {
 		stdout: mockWritableStream(stdoutBuffer),
 		cli: { name: 'nosg-test-async' }
 	});
+
+	t.true(runGeneratorPromise instanceof Promise);
 
 	runGeneratorPromise.then(()=>{
 		t.true(generateCalled);
@@ -621,35 +625,160 @@ test.todo('timeout default value');
 
 /*------------------*/
 
-test.todo('runGenerator with a complete component path as generator');
-test.todo('runGenerator with a complete component path as generator and options');
-test.todo('runGenerator with a complete component path as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a complete component path as generator and overriding sourcesDirectory and options');
+function runGeneratorWithAStringAsGeneratorMacro(t, {
+	generatorPath,
+	generator,
+	options,
+	sourcesDirectory,
+	expectedOptions,
+	expectedStdoutBufferContent,
+	fakeSourcesParentDirectory
+}) {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+	const stdoutBuffer = [];
+
+	t.true(generator.notCalled);
+
+	if (fakeSourcesParentDirectory) {
+		const cwdCache = process.cwd();
+		const cwd = sinon.stub(process, 'cwd').callsFake(() => {
+			const stack = new Error('stack').stack;
+			const inRunGenerateCommand = stack.indexOf('files-generator/sources/generate.js') < 0;
+
+			if (inRunGenerateCommand) {
+				cwd.restore();
+				return fakeSourcesParentDirectory;
+			}
+
+			return cwdCache;
+		});
+	}
+
+	const runGeneratorPromise = runGenerator({
+		generator: generatorPath,
+		options,
+		sourcesDirectory,
+		stdout: mockWritableStream(stdoutBuffer),
+		cli: { name: 'nosg-test' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+
+	runGeneratorPromise.then(()=>{
+		t.true(generator.calledOnce);
+
+		const call = generator.getCall(0).args;
+		t.is(call.length, 2);
+
+		t.is(typeof call[0], 'function');
+		t.deepEqual(call[1], expectedOptions);
+
+		t.is(stdoutBuffer.join(''), expectedStdoutBufferContent);
+
+		t.end();
+	});
+}
+
+test.cb('runGenerator with a complete component path as generator', runGeneratorWithAStringAsGeneratorMacro, {
+	generatorPath: 'components-set-a/layer-a/generator-component-a',
+	generator: requireFromIndex('tests/mocks/sources/components-set-a/layer-a/generator-component-a'),
+	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
+	expectedOptions: {
+		sourcesDirectory: pathFromIndex('tests/mocks/sources')
+	},
+	expectedStdoutBufferContent: msg(
+		`LOG: nosg-test run-generator will`,
+		`run the generator "components-set-a/layer-a/generator-component-a" with the options {}.`
+	)+nl+msg(
+		`SUCCESS: nosg-test run-generator correctly`,
+		`runned the generator "components-set-a/layer-a/generator-component-a" with the options {}.`
+	)+nl
+});
+
+test.cb('runGenerator with a complete component path as generator and options', runGeneratorWithAStringAsGeneratorMacro, {
+	generatorPath: 'components-set-b/layer-a/generator-component-a',
+	generator: requireFromIndex('tests/mocks/sources/components-set-b/layer-a/generator-component-a'),
+	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
+	options: {valueOne: 'value one'},
+	expectedOptions: {
+		sourcesDirectory: pathFromIndex('tests/mocks/sources'),
+		valueOne: 'value one'
+	},
+	expectedStdoutBufferContent: msg(
+		`LOG: nosg-test run-generator will`,
+		`run the generator "components-set-b/layer-a/generator-component-a" with the options {"valueOne":"value one"}.`
+	)+nl+msg(
+		`SUCCESS: nosg-test run-generator correctly`,
+		`runned the generator "components-set-b/layer-a/generator-component-a" with the options {"valueOne":"value one"}.`
+	)+nl
+});
+
+test.cb('runGenerator with a complete component path as generator and overriding sourcesDirectory', runGeneratorWithAStringAsGeneratorMacro, {
+	generatorPath: 'components-set-c/layer-a/generator-component-a',
+	generator: requireFromIndex('tests/mocks/sources/components-set-c/layer-a/generator-component-a'),
+	sourcesDirectory: 'tests/mocks/sources',
+	options: {valueTwo: 'value two'},
+	expectedOptions: {
+		sourcesDirectory: pathFromIndex('tests/mocks/sources'),
+		valueTwo: 'value two'
+	},
+	expectedStdoutBufferContent: msg(
+		`LOG: nosg-test run-generator will`,
+		`run the generator "components-set-c/layer-a/generator-component-a" with the options {"valueTwo":"value two"}.`
+	)+nl+msg(
+		`SUCCESS: nosg-test run-generator correctly`,
+		`runned the generator "components-set-c/layer-a/generator-component-a" with the options {"valueTwo":"value two"}.`
+	)+nl
+});
 
 test.todo('runGenerator with a layer/component path as generator');
 test.todo('runGenerator with a layer/component path as generator and options');
 test.todo('runGenerator with a layer/component path as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a layer/component path as generator and overriding sourcesDirectory and options');
 
 test.todo('runGenerator with a set:component path as generator');
 test.todo('runGenerator with a set:component path as generator and options');
 test.todo('runGenerator with a set:component path as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a set:component path as generator and overriding sourcesDirectory and options');
 
 test.todo('runGenerator with a component name as generator');
 test.todo('runGenerator with a component name as generator and options');
 test.todo('runGenerator with a component name as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a component name as generator and overriding sourcesDirectory and options');
 
 test.todo('runGenerator with a nested component path as generator');
 test.todo('runGenerator with a nested component path as generator and options');
 test.todo('runGenerator with a nested component path as generator and overriding sourcesDirectory');
-test.todo('runGenerator with a nested component path as generator and overriding sourcesDirectory and options');
 
-test.todo('runGenerator with an absolute Javascript Value Locator as generator');
-test.todo('runGenerator with an asbolute Javascript Value Locator as generator and options');
-test.todo('runGenerator with a relative Javascript Value Locator as generator');
-test.todo('runGenerator with a relative Javascript Value Locator as generator and options');
+/*---------------*/
+
+test.todo('runGenerator with a complete component path as generator - matching no file');
+test.todo('runGenerator with a complete component path as generator - matching no valid generator');
+
+test.todo('runGenerator with a layer/component path as generator - matching no file');
+test.todo('runGenerator with a layer/component path as generator - matching no valid generator');
+test.todo('runGenerator with a layer/component path as generator - matching more than one file');
+
+test.todo('runGenerator with a set:component path as generator - matching no file');
+test.todo('runGenerator with a set:component path as generator - matching no valid generator');
+test.todo('runGenerator with a set:component path as generator - matching more than one file');
+
+test.todo('runGenerator with a component name as generator - matching no file');
+test.todo('runGenerator with a component name as generator - matching no valid generator');
+test.todo('runGenerator with a component name as generator - matching more than one file');
+
+/*---------------*/
+
+test.todo('runGenerator with an absolute Javascript Value Locator (string) as generator');
+test.todo('runGenerator with an asbolute Javascript Value Locator (string) as generator and options');
+test.todo('runGenerator with a relative Javascript Value Locator (string) as generator');
+test.todo('runGenerator with a relative Javascript Value Locator (string) as generator and options');
+test.todo('runGenerator with an absolute Javascript Value Locator (string) as generator - matching no file');
+test.todo('runGenerator with an absolute Javascript Value Locator (string) as generator - matching no valid generator');
+
+test.todo('runGenerator with an absolute Javascript Value Locator (object) as generator');
+test.todo('runGenerator with an asbolute Javascript Value Locator (object) as generator and options');
+test.todo('runGenerator with a relative Javascript Value Locator (object) as generator');
+test.todo('runGenerator with a relative Javascript Value Locator (object) as generator and options');
+test.todo('runGenerator with an absolute Javascript Value Locator (object) as generator - matching no file');
+test.todo('runGenerator with an absolute Javascript Value Locator (object) as generator - matching no valid generator');
 
 /*---------------*/
 
@@ -659,7 +788,80 @@ test.todo('error if generate emit an error event');
 
 /*---------------*/
 
-test.todo('runGenerator with unvalid generator');
+function unvalidGeneratorMacro(t, unvalidValue, errorMessage){
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const unvalidGeneratorError = t.throws(()=>{
+		runGenerator({
+			generator: unvalidValue
+		})
+	});
+
+	t.is(unvalidGeneratorError.message, errorMessage);
+}
+
+unvalidGeneratorMacro.title = providedTitle => (
+	`runGenerator with unvalid generator - ${providedTitle}`
+)
+
+test('with number', unvalidGeneratorMacro, 2, msg(
+	`2 (number) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with empty array', unvalidGeneratorMacro, [], msg(
+	`(object) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with empty object', unvalidGeneratorMacro, {}, msg(
+	`[object Object] (object) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with array', unvalidGeneratorMacro, ['value', 4], msg(
+	`value,4 (object) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with object', unvalidGeneratorMacro, {key: 'value'}, msg(
+	`[object Object] (object) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with regexp', unvalidGeneratorMacro, /regexp/, msg(
+	`/regexp/ (object) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with false', unvalidGeneratorMacro, false, msg(
+	`false (boolean) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with undefined', unvalidGeneratorMacro, undefined, msg(
+	`undefined (undefined) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with null', unvalidGeneratorMacro, null, msg(
+	`null (object) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test('with true', unvalidGeneratorMacro, true, msg(
+	`true (boolean) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+test.skip('with symbol', unvalidGeneratorMacro, Symbol(), msg(
+	`2 (number) is not a valid generator value.`,
+	`Generator can be a function, a component path to`,
+	`a function or a Javascript Value Locator to a function.`
+));
+
+/*---------------*/
+
 test.todo('runGenerator with unvalid options');
 test.todo('runGenerator with unvalid sourcesDirectory');
 test.todo('runGenerator with unvalid timeout');
@@ -684,3 +886,4 @@ test.todo('log enhancement');
 /*----------------------*/
 
 test.todo('test with actual file creation');
+test.todo('test with actual file creation using a component path as generator');

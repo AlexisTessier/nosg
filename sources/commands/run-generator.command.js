@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const assert = require('assert');
 
 const generateGenerate = require('files-generator');
 
@@ -32,8 +33,11 @@ function runGeneratorCommand({
 	stdout,
 	cli
 }) {
-	const loggableOptions = JSON.stringify(options);
-	const loggableGenerator = generator.name;
+	assert(typeof generator === 'function' || typeof generator === 'string', msg(
+		`${generator} (${typeof generator}) is not a valid generator value.`,
+		`Generator can be a function, a component path to`,
+		`a function or a Javascript Value Locator to a function.`
+	));
 
 	const sourcesDirectoryArg = sourcesDirectory;
 	const useAbsoluteSourcesDirectory = path.isAbsolute(sourcesDirectory);
@@ -76,6 +80,10 @@ function runGeneratorCommand({
 		}
 	}
 
+	const loggableOptions = JSON.stringify(options);
+	const loggableGenerator = typeof generator === 'function' ? generator.name : generator;
+
+	generator = typeof generator === 'string' ? require(path.join(sourcesDirectory, generator)) : generator;
 
 	log(stdout, msg(
 		`${cli.name} run-generator will run the generator "${loggableGenerator}"`,
