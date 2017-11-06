@@ -527,9 +527,50 @@ test('Trying to use an unexistent relative sourcesDirectory must throw error', t
 	));
 });
 
-test.todo('Trying to use an absolute path to a non directory sourcesDirectory must throw error');
+test('Trying to use an absolute path to a non directory sourcesDirectory must throw error', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
-test.todo('Trying to use a relative path to a non directory sourcesDirectory must throw error');
+	const notDirectoryAbsolutePath = pathFromIndex('tests/mocks/not-a-directory');
+
+	const notDirectoryAbsolutePathError = t.throws(() => {
+		runGenerator({
+			sourcesDirectory: notDirectoryAbsolutePath,
+			generator(){
+				t.fail();
+			},
+			stdout: mockWritableStream(),
+			cli: { name: 'nosg-test' }
+		});
+	});
+
+	t.is(notDirectoryAbsolutePathError.message, msg(
+		`"${notDirectoryAbsolutePath}" is not a valid sources directory path.`,
+		`The path was found but it's not a directory.`
+	));
+});
+
+test('Trying to use a relative path to a non directory sourcesDirectory must throw error', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	const notDirectoryRelativePath = 'tests/mocks/not-a-directory'
+
+	const notDirectoryRelativePathError = t.throws(() => {
+		runGenerator({
+			sourcesDirectory: notDirectoryRelativePath,
+			generator(){
+				t.fail();
+			},
+			stdout: mockWritableStream(),
+			cli: { name: 'nosg-test' }
+		});
+	});
+
+	t.is(notDirectoryRelativePathError.message, msg(
+		`"${notDirectoryRelativePath}" is not a valid sources directory path.`,
+		`The path was found but it's not a directory. Ensure that you are running the run-generator`,
+		`command in an appropriate current working directory.`
+	));
+});
 
 /*------------------*/
 /*- Timeout option -*/

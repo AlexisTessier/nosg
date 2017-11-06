@@ -42,7 +42,18 @@ function runGeneratorCommand({
 
 	try{
 		if(!fs.lstatSync(sourcesDirectory).isDirectory()){
+			if (useAbsoluteSourcesDirectory) {
+				throw new Error(msg(
+					`"${sourcesDirectory}" is not a valid sources directory path.`,
+					`The path was found but it's not a directory.`
+				));
+			}
 
+			throw new Error(msg(
+				`"${sourcesDirectoryArg}" is not a valid sources directory path.`,
+				`The path was found but it's not a directory. Ensure that you are running the`,
+				`run-generator command in an appropriate current working directory.`
+			));
 		}
 	}
 	catch(err){
