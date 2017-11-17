@@ -26,3 +26,9 @@ test('Type and API', t => {
 
 	t.is(Object.keys(nosg).length, 3);
 });
+
+test.todo(`
+	EXTRACT AND CREATE
+	list-filepath-matching-component-path.command AND get-component-filepath.command
+	FROM run-generator.command
+`);
