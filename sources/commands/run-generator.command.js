@@ -18,8 +18,8 @@ const log = require('../tools/log');
  * @param {object} options An object containing the command options.
  * @param {function | string} options.generator The generator to use. It can be a function, the name of one nosg generator in the generators layers, or a Javascript Value Locator to a function.
  * @param {object} options.options The options passed to the generator function.
- * @param {object} options.sourcesDirectory The path to the sources directory of the nosg project to use.
- * @param {object} options.timeout The command timeout. If the command is not terminated after this duration, an error will be thrown.
+ * @param {string} options.sourcesDirectory The path to the sources directory of the nosg project to use.
+ * @param {number} options.timeout The command timeout. If the command is not terminated after this duration, an error will be thrown.
  * @param {function | string | JVL} options.generate The generate function to pass to the generator.
  *
  * @returns {Promise} A promise which resolve when all the generator ends to generate files.
@@ -105,6 +105,15 @@ function runGeneratorCommand({
 					`${cli.name} run-generator detected an error in the generator "${loggableGenerator}".`,
 					`The generator "${loggableGenerator}" doesn't have called yet the generate function`,
 					`after a timeout of ${timeout}ms. Try to increase the timeout option when using`,
+					`${cli.name} run-generator, or check that the generator works correctly and actually`,
+					`calls the generate function.`
+				)));
+			}
+			else{
+				reject(new Error(msg(
+					`${cli.name} run-generator detected an error in the generator "${loggableGenerator}".`,
+					`The generator "${loggableGenerator}" generate instance doesn't have emitted yet`,
+					`a finish event after a timeout of ${timeout}ms. Try to increase the timeout option when using`,
 					`${cli.name} run-generator, or check that the generator works correctly and actually`,
 					`calls the generate function.`
 				)));

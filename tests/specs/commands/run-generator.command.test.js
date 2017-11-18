@@ -42,6 +42,8 @@ test.cb('function as generator - generator is called with a generate function', 
 			`run the generator "generator" with the options {}.`
 		)+nl);
 
+		generate();
+
 		t.end();
 	}
 
@@ -94,6 +96,7 @@ test.cb('function as generator - generate instance can be overrided', t => {
 	});
 
 	t.true(runGeneratorPromise instanceof Promise);
+	runGeneratorPromise.catch(err => {return;});
 });
 
 test.cb('function as generator - generate synchronous call', t => {
@@ -275,9 +278,11 @@ test.cb('function as generator - generator is called with no options by default'
 		t.is(optionTwo, 'optionTwoDefaultValue');
 
 		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-defautl-options run-generator will`,
+			`LOG: nosg-test-default-options run-generator will`,
 			`run the generator "generator" with the options {}.`
 		)+nl);
+
+		generate();
 
 		t.end();
 	}
@@ -285,7 +290,7 @@ test.cb('function as generator - generator is called with no options by default'
 	const runGeneratorPromise = runGenerator({
 		generator,
 		stdout: mockWritableStream(stdoutBuffer),
-		cli: { name: 'nosg-test-defautl-options' }
+		cli: { name: 'nosg-test-default-options' }
 	});
 
 	t.true(runGeneratorPromise instanceof Promise);
@@ -312,6 +317,8 @@ test.cb('function as generator - generator is called with options if provided', 
 			`LOG: nosg-test-options run-generator will`,
 			`run the generator "generator" with the options {"optionOne":"option value 1","optionTwo":"option value 2"}.`
 		)+nl);
+
+		generate();
 
 		t.end();
 	}
@@ -345,6 +352,8 @@ test.cb('sourcesDirectory default value is accessible in the generator via the o
 			t.is(options.one, 42);
 			t.is(options.sourcesDirectory, path.join(process.cwd(), 'sources'));
 
+			generate();
+
 			t.end();
 		},
 		options: {
@@ -372,6 +381,8 @@ test.cb('sourcesDirectory (absolute one) option is accessible in the generator v
 			t.is(options.one, 43);
 			t.is(options.sourcesDirectory, absolutePath);
 
+			generate();
+
 			t.end();
 		},
 		options: {
@@ -397,6 +408,8 @@ test.cb('sourcesDirectory (relative one) option is accessible in the generator v
 			t.is(options.one, 44);
 			t.is(options.sourcesDirectory, path.join(process.cwd(), 'tests/mocks/sources-directory'));
 
+			generate();
+
 			t.end();
 		},
 		options: {
@@ -420,6 +433,8 @@ test.cb('sourcesDirectory default value can be overrided using the options optio
 
 			t.is(options.one, 'test value');
 			t.is(options.sourcesDirectory, 'overriding default value');
+
+			generate();
 
 			t.end();
 		},
@@ -447,6 +462,8 @@ test.cb('sourcesDirectory absolute path value can be overrided using the options
 			t.is(options.one, 'test value');
 			t.is(options.sourcesDirectory, 'overriding absolute path value');
 
+			generate();
+
 			t.end();
 		},
 		options: {
@@ -472,6 +489,8 @@ test.cb('sourcesDirectory relative path value can be overrided using the options
 
 			t.is(options.one, 'test value 2');
 			t.is(options.sourcesDirectory, 'overriding relative path value');
+
+			generate();
 
 			t.end();
 		},
@@ -620,8 +639,125 @@ test.cb('timeout option - error if generator never calls the generate function',
 	})();
 });
 
-test.todo('timeout option - error if generate never emit finish');
-test.todo('timeout default value');
+test.cb('timeout option - error if generate never emit finish', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	let errorDetected = false;
+
+	t.plan(3);
+
+	setTimeout(()=>{
+		t.false(errorDetected);
+	}, 80);
+
+
+	setTimeout(()=>{
+		t.true(errorDetected);
+		t.end();
+	}, 120);
+
+	(async () => {
+		try{
+			await runGenerator({
+				generator(generate){ generate() },
+				timeout: 100,
+				stdout: mockWritableStream(),
+				cli: { name: 'cli-name-2' },
+				generate: Object.assign(function () {
+				}, { on(){return;} })
+			});
+			t.fail();
+		}
+		catch(finishEventNotEmittedError){
+			errorDetected = true;
+			t.is(finishEventNotEmittedError.message, msg(
+				`cli-name-2 run-generator detected an error`,
+				`in the generator "generator". The generator "generator"`,
+				`generate instance doesn't have emitted yet a finish event after a timeout of 100ms.`,
+				`Try to increase the timeout option when using cli-name-2 run-generator,`,
+				`or check that the generator works correctly and actually calls the generate function.`
+			));
+		}
+	})();
+});
+
+test.cb('timeout default value - never calls the generate function', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	let errorDetected = false;
+
+	t.plan(3);
+
+	setTimeout(()=>{
+		t.false(errorDetected);
+	}, 9980);
+
+	setTimeout(()=>{
+		t.true(errorDetected);
+		t.end();
+	}, 10020);
+
+	(async () => {
+		try{
+			await runGenerator({
+				generator(){ return; },
+				stdout: mockWritableStream(),
+				cli: { name: 'cli-name-def' }
+			});
+			t.fail();
+		}
+		catch(notCalledGenerateError){
+			errorDetected = true;
+			t.is(notCalledGenerateError.message, msg(
+				`cli-name-def run-generator detected an error`,
+				`in the generator "generator". The generator "generator"`,
+				`doesn't have called yet the generate function after a timeout of 10000ms.`,
+				`Try to increase the timeout option when using cli-name-def run-generator,`,
+				`or check that the generator works correctly and actually calls the generate function.`
+			));
+		}
+	})();
+});
+
+test.cb('timeout default value - generate never emit finish', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+
+	let errorDetected = false;
+
+	t.plan(3);
+
+	setTimeout(()=>{
+		t.false(errorDetected);
+	}, 9980);
+
+	setTimeout(()=>{
+		t.true(errorDetected);
+		t.end();
+	}, 10020);
+
+	(async () => {
+		try{
+			await runGenerator({
+				generator(generate){ generate() },
+				stdout: mockWritableStream(),
+				cli: { name: 'cli-name-2-def' },
+				generate: Object.assign(function () {
+				}, { on(){return;} })
+			});
+			t.fail();
+		}
+		catch(finishEventNotEmittedError){
+			errorDetected = true;
+			t.is(finishEventNotEmittedError.message, msg(
+				`cli-name-2-def run-generator detected an error`,
+				`in the generator "generator". The generator "generator"`,
+				`generate instance doesn't have emitted yet a finish event after a timeout of 10000ms.`,
+				`Try to increase the timeout option when using cli-name-2-def run-generator,`,
+				`or check that the generator works correctly and actually calls the generate function.`
+			));
+		}
+	})();
+});
 
 /*------------------*/
 
