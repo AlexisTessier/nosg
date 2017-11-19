@@ -114,7 +114,12 @@ test.todo('usage with a layer/component path with extension - matching no file (
 test.todo('usage with a layer/component path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a layer/component path - matching more than one file');
 
-test.todo('usage with a set:component path');
+test('usage with a set:component path', usageMacro, {
+	componentPath: 'comp-set-layer:comp-from-layer',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/comp-set-layer/layer-a/comp-from-layer.js')
+	]
+});
 test.todo('usage with a set:component path and overriding sourcesDirectory');
 test.todo('usage with a set:component path matching a directory with a index.js in it');
 test.todo('usage with a set:component path - matching no file');

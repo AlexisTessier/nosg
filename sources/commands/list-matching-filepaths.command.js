@@ -10,6 +10,10 @@ const log = require('../tools/log');
 
 const checkSourcesDirectory = require('./check-sources-directory.command');
 
+const pathSep = '/';
+const setSep = ':';
+const joker = '*';
+
 /**
  * @name list-matching-filepaths
  *
@@ -28,15 +32,15 @@ function listMatchingFilepathsCommand({
 }) {
 	sourcesDirectory = checkSourcesDirectory({sourcesDirectory});
 
-	const sep = '/';
-
-	const splittedComponentPath = componentPath.split(sep);
+	const splittedComponentPath = componentPath
+		.replace(setSep, [pathSep, joker, pathSep].join(''))
+		.split(pathSep);
 
 	if (splittedComponentPath.length === 2) {
-		splittedComponentPath.unshift('*');
+		splittedComponentPath.unshift(joker);
 	}
 
-	const patternComponentPath = splittedComponentPath.join(sep);
+	const patternComponentPath = splittedComponentPath.join(pathSep);
 	
 	const patterns = [
 		`${path.join(sourcesDirectory, patternComponentPath)}.js`,
