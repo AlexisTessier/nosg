@@ -9,9 +9,6 @@ const checkSourcesDirectory = require('./check-sources-directory.command');
 
 const {
 	unvalidGenerator: UNV_GEN,
-	unvalidSourcesDirectory: UNV_SRC_DIR,
-	unexistentSourcesDirectory: UNE_SRC_DIR,
-	ensureCurrentWorkingDirectory: ENS_CWD,
 	generateNotCalledTimeout: GEN_NOT_CAL_TMO,
 	generateFinishEventNotEmittedTimeout: GEN_FIN_EVT_TMO,
 	willRunGenerator: WIL_RUN_GEN,
@@ -51,17 +48,7 @@ function runGeneratorCommand({
 
 	const command = 'run-generator';
 
-	const useAbsoluteSourcesDirectory = path.isAbsolute(sourcesDirectory);
-
-	try{
-		sourcesDirectory = checkSourcesDirectory({sourcesDirectory});
-	}
-	catch(err){
-		if (!useAbsoluteSourcesDirectory) {
-			throw new Error([err.message, ENS_CWD({command})].join(' '))
-		}
-		throw err;
-	}
+	sourcesDirectory = checkSourcesDirectory({sourcesDirectory});
 
 	const generatorFunction = typeof generator === 'string' ? require(path.join(sourcesDirectory, generator)) : generator;
 

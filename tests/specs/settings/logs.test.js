@@ -69,12 +69,9 @@ test('ensureCurrentWorkingDirectory', t => {
 	const logs = requireFromIndex('sources/settings/logs');
 
 	t.is(typeof logs.ensureCurrentWorkingDirectory, 'function');
-	t.is(logs.ensureCurrentWorkingDirectory({command: 'test'}),
-		`Ensure that you are running the test command in an appropriate current working directory.`
-	);
 
-	t.is(logs.ensureCurrentWorkingDirectory({command: 'command-to-test'}),
-		`Ensure that you are running the command-to-test command in an appropriate current working directory.`
+	t.is(logs.ensureCurrentWorkingDirectory(),
+		`Ensure that you are running the command in an appropriate current working directory.`
 	);
 });
 

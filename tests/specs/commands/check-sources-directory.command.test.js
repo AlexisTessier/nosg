@@ -75,7 +75,7 @@ test('usage with an unexistent absolute sources directory', t => {
 	const unexistentAbsolutePathError = t.throws(() => {
 		checkSourcesDirectory({
 			sourcesDirectory: unexistentAbsolutePath,
-			stdout: mockWritableStream()
+			stdout: mockWritableStream(stdoutBuffer)
 		});
 	});
 
@@ -93,13 +93,15 @@ test('usage with an unexistent relative sources directory', t => {
 	const unexistentRelativePathError = t.throws(() => {
 		checkSourcesDirectory({
 			sourcesDirectory: unexistentRelativePath,
-			stdout: mockWritableStream()
+			stdout: mockWritableStream(stdoutBuffer)
 		});
 	});
 
-	t.is(unexistentRelativePathError.message, logs.unexistentSourcesDirectory({
-		sourcesDirectory: pathFromIndex(unexistentRelativePath)
-	}));
+	t.is(unexistentRelativePathError.message, msg(
+		logs.unexistentSourcesDirectory({
+			sourcesDirectory: pathFromIndex(unexistentRelativePath)
+		}), logs.ensureCurrentWorkingDirectory()
+	));
 
 	t.is(stdoutBuffer.join(''), '');
 });
@@ -113,7 +115,7 @@ test('usage with a not directory absolute sources directory', t => {
 	const unvalidAbsolutePathError = t.throws(() => {
 		checkSourcesDirectory({
 			sourcesDirectory: unvalidAbsolutePath,
-			stdout: mockWritableStream()
+			stdout: mockWritableStream(stdoutBuffer)
 		});
 	});
 
@@ -131,18 +133,32 @@ test('usage with a not directory relative sources directory', t => {
 	const unvalidRelativePathError = t.throws(() => {
 		checkSourcesDirectory({
 			sourcesDirectory: unvalidRelativePath,
-			stdout: mockWritableStream()
+			stdout: mockWritableStream(stdoutBuffer)
 		});
 	});
 
-	t.is(unvalidRelativePathError.message, logs.unvalidSourcesDirectory({
-		sourcesDirectory: pathFromIndex(unvalidRelativePath)
-	}));
+	t.is(unvalidRelativePathError.message, msg(
+		logs.unvalidSourcesDirectory({
+			sourcesDirectory: pathFromIndex(unvalidRelativePath)
+		}), logs.ensureCurrentWorkingDirectory()
+	));
 
 	t.is(stdoutBuffer.join(''), '');
 });
 
-test.todo('should work without stdout option');
+test('should work without stdout option', t => {
+	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');
+
+	const sourcesDirectory = pathFromIndex('tests/mocks/sources-directory');
+
+	const checkSourcesDirectoryResult = checkSourcesDirectory({
+		sourcesDirectory
+	});
+
+	t.is(checkSourcesDirectoryResult, sourcesDirectory);
+
+	const successLog = logs.validSourcesDirectory({sourcesDirectory});
+});
 
 /*-----------------------*/
 
@@ -176,10 +192,10 @@ test('usage with unvalid parameters - array', unvalidParametersMacro, [[]],
 	` (object) is not a valid option object.`
 );
 
-test.todo('usage with unvalid option sourcesDirectory');
-test.todo('usage with unvalid option stdout');
+test.todo('VANILLE TYPE DEPENDENT / usage with unvalid option sourcesDirectory');
+test.todo('VANILLE TYPE DEPENDENT / usage with unvalid option stdout');
 
 /*-----------------------*/
 
-test.todo('log enhancement using stringable');
-test.todo('log enhancement');
+test.todo('STRINGABLE DEPENDENT / log enhancement using stringable');
+test.todo('WAIT FOR BATTE TESTING / log enhancement');

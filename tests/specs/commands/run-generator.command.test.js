@@ -571,7 +571,7 @@ test('Trying to use an unexistent relative sourcesDirectory must throw error', t
 
 	t.is(unexistentRelativePathError.message, msg(
 		logs.unexistentSourcesDirectory({sourcesDirectory: pathFromIndex(unexistentRelativePath)}),
-		logs.ensureCurrentWorkingDirectory({command: 'run-generator'})
+		logs.ensureCurrentWorkingDirectory()
 	));
 });
 
@@ -612,7 +612,7 @@ test('Trying to use a relative path to a non directory sourcesDirectory must thr
 
 	t.is(notDirectoryRelativePathError.message, msg(
 		logs.unvalidSourcesDirectory({sourcesDirectory: pathFromIndex(notDirectoryRelativePath)}),
-		logs.ensureCurrentWorkingDirectory({command: 'run-generator'})
+		logs.ensureCurrentWorkingDirectory()
 	));
 });
 
@@ -700,7 +700,7 @@ test.cb('timeout option - error if generate never emit finish', t => {
 	})();
 });
 
-test.cb('timeout default value - never calls the generate function', t => {
+test.cb.skip('timeout default value - never calls the generate function', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
 	let errorDetected = false;
@@ -737,7 +737,7 @@ test.cb('timeout default value - never calls the generate function', t => {
 	})();
 });
 
-test.cb('timeout default value - generate never emit finish', t => {
+test.cb.skip('timeout default value - generate never emit finish', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
 	let errorDetected = false;

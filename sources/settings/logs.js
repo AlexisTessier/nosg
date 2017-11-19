@@ -20,9 +20,9 @@ module.exports = {
 		`"${sourcesDirectory}" is not a valid sources directory path.`,
 		`The directory doesn't seem to exist.`
 	),
-	ensureCurrentWorkingDirectory: ({command}) => msg(
-		`Ensure that you are running the ${command}`,
-		`command in an appropriate current working directory.`
+	ensureCurrentWorkingDirectory: () => msg(
+		`Ensure that you are running the command`,
+		`in an appropriate current working directory.`
 	),
 	generateNotCalledTimeout: ({ cli = {}, command, generator, timeout }) => msg(
 		`${cli.name} ${command} detected an error in the generator "${loggableGenerator(generator)}".`,

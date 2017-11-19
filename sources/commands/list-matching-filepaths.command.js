@@ -1,8 +1,14 @@
 'use strict';
 
+const path = require('path');
+
+const glob = require('glob');
+
 const defaultOptions = require('../settings/default-options');
 
 const log = require('../tools/log');
+
+const checkSourcesDirectory = require('./check-sources-directory.command');
 
 /**
  * @name list-matching-filepaths
@@ -17,9 +23,20 @@ const log = require('../tools/log');
  */
 function listMatchingFilepathsCommand({
 	componentPath,
-	sourcesDirectory = defaultOptions.sourcesDirectory
+	sourcesDirectory = defaultOptions.sourcesDirectory,
+	stdout
 }) {
-	const matchingFilepaths = [];
+	sourcesDirectory = checkSourcesDirectory({sourcesDirectory});
+
+	const matchingFilepaths = []; [
+		`${path.join(sourcesDirectory, componentPath)}.js`,
+		`${path.join(sourcesDirectory, componentPath)}/index.js`
+	].forEach(pattern => matchingFilepaths.push(...glob.sync(pattern, {nodir: true})))
+
+	log(stdout, [
+		`List of filepaths matching "${componentPath}":`,
+		...matchingFilepaths.map(filepath => `\t- "${filepath}"`)
+	].join('\n'));
 
 	return matchingFilepaths;
 }

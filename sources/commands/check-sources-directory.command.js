@@ -8,7 +8,8 @@ const defaultOptions = require('../settings/default-options');
 const {
 	validSourcesDirectory: VAL_SRC_DIR,
 	unvalidSourcesDirectory: UNV_SRC_DIR,
-	unexistentSourcesDirectory: UNE_SRC_DIR
+	unexistentSourcesDirectory: UNE_SRC_DIR,
+	ensureCurrentWorkingDirectory: ENS_CWD
 } = require('../settings/logs');
 
 const log = require('../tools/log');
@@ -21,7 +22,7 @@ const log = require('../tools/log');
  * @param {object} options An object containing the command options.
  * @param {string} options.sourcesDirectory The path to the sources directory of the nosg project to check.
  *
- * @returns {string} The absolute path to sources directory.
+ * @return {string} The absolute path to sources directory.
  */
 function checkSourcesDirectoryCommand({
 	sourcesDirectory = defaultOptions.sourcesDirectory,
@@ -34,24 +35,48 @@ function checkSourcesDirectoryCommand({
 
 	/*-------------------------*/
 
-	const absoluteSourcesDirectory = path.isAbsolute(sourcesDirectory) ? sourcesDirectory : path.join(process.cwd(), sourcesDirectory);
+	const useAbsoluteSourcesDirectory = path.isAbsolute(sourcesDirectory);
+	const absoluteSourcesDirectory = useAbsoluteSourcesDirectory ? sourcesDirectory : path.join(process.cwd(), sourcesDirectory);
 
 	try{
-		if(!fs.lstatSync(absoluteSourcesDirectory).isDirectory()){
-			throw new Error(UNV_SRC_DIR({sourcesDirectory: absoluteSourcesDirectory}));
-		}
+		checkSourcesDirectory(absoluteSourcesDirectory);
 	}
 	catch(err){
-		if(err.code == 'ENOENT'){
-			throw new Error(UNE_SRC_DIR({sourcesDirectory: absoluteSourcesDirectory}));
+		if (!useAbsoluteSourcesDirectory) {
+			throw new Error([err.message, ENS_CWD()].join(' '))
 		}
-
 		throw err;
 	}
 
 	log.success(stdout, VAL_SRC_DIR({sourcesDirectory: absoluteSourcesDirectory}));
 
 	return absoluteSourcesDirectory;
+}
+
+/**
+ * @private
+ * 
+ * @description Check if a sources directory exist and is actually a directory.
+ *
+ * @param {string} sourcesDirectory The path to the sources pirectory to check.
+ * 
+ * @throws {Error} If the sources directory doesn't exist or if it's not a directory, an error is thrown.
+ *
+ * @return {undefined}
+ */
+function checkSourcesDirectory(sourcesDirectory) {
+	try{
+		if(!fs.lstatSync(sourcesDirectory).isDirectory()){
+			throw new Error(UNV_SRC_DIR({sourcesDirectory}));
+		}
+	}
+	catch(err){
+		if(err.code == 'ENOENT'){
+			throw new Error(UNE_SRC_DIR({sourcesDirectory}));
+		}
+
+		throw err;
+	}
 }
 
 module.exports = checkSourcesDirectoryCommand;
