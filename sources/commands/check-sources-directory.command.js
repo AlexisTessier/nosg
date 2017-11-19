@@ -55,11 +55,11 @@ function checkSourcesDirectoryCommand({
 
 /**
  * @private
- * 
+ *
  * @description Check if a sources directory exist and is actually a directory.
  *
  * @param {string} sourcesDirectory The path to the sources pirectory to check.
- * 
+ *
  * @throws {Error} If the sources directory doesn't exist or if it's not a directory, an error is thrown.
  *
  * @return {undefined}
