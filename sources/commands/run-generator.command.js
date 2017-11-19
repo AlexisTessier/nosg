@@ -2,11 +2,21 @@
 
 const fs = require('fs');
 const path = require('path');
-const assert = require('assert');
 
 const generateGenerate = require('files-generator');
 
-const msg = require('@alexistessier/msg');
+const checkSourcesDirectory = require('./check-sources-directory.command');
+
+const {
+	unvalidGenerator: UNV_GEN,
+	unvalidSourcesDirectory: UNV_SRC_DIR,
+	unexistentSourcesDirectory: UNE_SRC_DIR,
+	ensureCurrentWorkingDirectory: ENS_CWD,
+	generateNotCalledTimeout: GEN_NOT_CAL_TMO,
+	generateFinishEventNotEmittedTimeout: GEN_FIN_EVT_TMO,
+	willRunGenerator: WIL_RUN_GEN,
+	hasRunnedGenerator: HAS_RUN_GEN
+} = require('../settings/logs');
 
 const log = require('../tools/log');
 
@@ -33,62 +43,31 @@ function runGeneratorCommand({
 	stdout,
 	cli
 }) {
-	assert(typeof generator === 'function' || typeof generator === 'string', msg(
-		`${generator} (${typeof generator}) is not a valid generator value.`,
-		`Generator can be a function, a component path to`,
-		`a function or a Javascript Value Locator to a function.`
-	));
+	if (typeof generator !== 'function' && typeof generator !== 'string') {
+		throw new TypeError(UNV_GEN({generator}));
+	}
 
-	const sourcesDirectoryArg = sourcesDirectory;
+	/*----------------------------*/
+
+	const command = 'run-generator';
+
 	const useAbsoluteSourcesDirectory = path.isAbsolute(sourcesDirectory);
 
-	sourcesDirectory = useAbsoluteSourcesDirectory ? sourcesDirectory : path.join(process.cwd(), sourcesDirectory);
-
 	try{
-		if(!fs.lstatSync(sourcesDirectory).isDirectory()){
-			if (useAbsoluteSourcesDirectory) {
-				throw new Error(msg(
-					`"${sourcesDirectory}" is not a valid sources directory path.`,
-					`The path was found but it's not a directory.`
-				));
-			}
-
-			throw new Error(msg(
-				`"${sourcesDirectoryArg}" is not a valid sources directory path.`,
-				`The path was found but it's not a directory. Ensure that you are running the`,
-				`run-generator command in an appropriate current working directory.`
-			));
-		}
+		sourcesDirectory = checkSourcesDirectory({sourcesDirectory});
 	}
 	catch(err){
-		if(err.code == 'ENOENT'){
-			if (useAbsoluteSourcesDirectory) {
-				throw new Error(msg(
-					`"${sourcesDirectory}" is not a valid sources directory path.`,
-					`The directory doesn't seem to exist.`
-				));
-			}
-
-			throw new Error(msg(
-				`"${sourcesDirectoryArg}" is not a valid sources directory path.`,
-				`The directory doesn't seem to exist. Ensure that you are running the`,
-				`run-generator command in an appropriate current working directory.`
-			));
+		if (!useAbsoluteSourcesDirectory) {
+			throw new Error([err.message, ENS_CWD({command})].join(' '))
 		}
-		else{
-			throw err;
-		}
+		throw err;
 	}
 
-	const loggableOptions = JSON.stringify(options);
-	const loggableGenerator = typeof generator === 'function' ? generator.name : generator;
+	const generatorFunction = typeof generator === 'string' ? require(path.join(sourcesDirectory, generator)) : generator;
 
-	generator = typeof generator === 'string' ? require(path.join(sourcesDirectory, generator)) : generator;
-
-	log(stdout, msg(
-		`${cli.name} run-generator will run the generator "${loggableGenerator}"`,
-		`with the options ${loggableOptions}.`
-	));
+	log(stdout, WIL_RUN_GEN({
+		cli, command, generator, options
+	}));
 
 	let generateCallCount = 0;
 	const generateProxy = new Proxy(generate, {
@@ -101,22 +80,14 @@ function runGeneratorCommand({
 	const promise = new Promise((resolve, reject) => {
 		const rejectTimeout = setTimeout(()=>{
 			if (generateCallCount === 0) {
-				reject(new Error(msg(
-					`${cli.name} run-generator detected an error in the generator "${loggableGenerator}".`,
-					`The generator "${loggableGenerator}" doesn't have called yet the generate function`,
-					`after a timeout of ${timeout}ms. Try to increase the timeout option when using`,
-					`${cli.name} run-generator, or check that the generator works correctly and actually`,
-					`calls the generate function.`
-				)));
+				reject(new Error(GEN_NOT_CAL_TMO({
+					cli, command, generator, timeout
+				})));
 			}
 			else{
-				reject(new Error(msg(
-					`${cli.name} run-generator detected an error in the generator "${loggableGenerator}".`,
-					`The generator "${loggableGenerator}" generate instance doesn't have emitted yet`,
-					`a finish event after a timeout of ${timeout}ms. Try to increase the timeout option when using`,
-					`${cli.name} run-generator, or check that the generator works correctly and actually`,
-					`calls the generate function.`
-				)));
+				reject(new Error(GEN_FIN_EVT_TMO({
+					cli, command, generator, timeout
+				})));
 			}
 		}, timeout);
 
@@ -124,17 +95,16 @@ function runGeneratorCommand({
 			clearTimeout(rejectTimeout);
 			generate.off('finish', resolver);
 
-			log.success(stdout, msg(
-				`${cli.name} run-generator correctly runned the generator "${loggableGenerator}"`,
-				`with the options ${loggableOptions}.`
-			));
+			log.success(stdout, HAS_RUN_GEN({
+				cli, command, generator, options
+			}));
 
 			resolve();
 		};
 		generate.on('finish', resolver);
 	});
 
-	generator(generateProxy, Object.assign({
+	generatorFunction(generateProxy, Object.assign({
 		sourcesDirectory
 	}, options));
 

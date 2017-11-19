@@ -45,7 +45,7 @@ function usageMacro(t, {
 	t.is(stdoutBuffer.join(''), '');
 }
 
-test('usage with a complete component path', usageMacro, {
+test.skip('usage with a complete component path', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a',
 	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
 	expectedResult: [

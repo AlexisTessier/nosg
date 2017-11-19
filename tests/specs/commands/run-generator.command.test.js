@@ -15,6 +15,8 @@ const requireFromIndex = require('../../utils/require-from-index');
 const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
 const mockFunction = requireFromIndex('tests/mocks/mock-function');
 
+const logs = requireFromIndex('sources/settings/logs');
+
 test('Type', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
@@ -37,10 +39,13 @@ test.cb('function as generator - generator is called with a generate function', 
 		t.is(typeof generate.on, 'function');
 		t.is(typeof generate.off, 'function');
 
-		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-name run-generator will`,
-			`run the generator "generator" with the options {}.`
-		)+nl);
+		const logMessage = logs.willRunGenerator({
+			cli: {name: 'nosg-test-name'},
+			command: 'run-generator',
+			generator: 'generator',
+			options: {}
+		});
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\n`);
 
 		generate();
 
@@ -121,13 +126,21 @@ test.cb('function as generator - generate synchronous call', t => {
 	runGeneratorPromise.then(()=>{
 		t.true(generateCalled);
 
-		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test run-generator will`,
-			`run the generator "generatorSync" with the options {}.`
-		)+nl+msg(
-			`SUCCESS: nosg-test run-generator correctly`,
-			`runned the generator "generatorSync" with the options {}.`
-		)+nl);
+		const logMessage = logs.willRunGenerator({
+			cli: {name: 'nosg-test'},
+			command: 'run-generator',
+			generator: 'generatorSync',
+			options: {}
+		});
+
+		const successMessage = logs.hasRunnedGenerator({
+			cli: {name: 'nosg-test'},
+			command: 'run-generator',
+			generator: 'generatorSync',
+			options: {}
+		});
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\n`);
 
 		t.end();
 	});
@@ -157,13 +170,21 @@ test.cb('function as generator - generate asynchronous call', t => {
 	runGeneratorPromise.then(()=>{
 		t.true(generateCalled);
 
-		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-async run-generator will`,
-			`run the generator "generatorAsync" with the options {}.`
-		)+nl+msg(
-			`SUCCESS: nosg-test-async run-generator correctly`,
-			`runned the generator "generatorAsync" with the options {}.`
-		)+nl);
+		const logMessage = logs.willRunGenerator({
+			cli: {name: 'nosg-test-async'},
+			command: 'run-generator',
+			generator: 'generatorAsync',
+			options: {}
+		});
+
+		const successMessage = logs.hasRunnedGenerator({
+			cli: {name: 'nosg-test-async'},
+			command: 'run-generator',
+			generator: 'generatorAsync',
+			options: {}
+		});
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\n`);
 
 		t.end();
 	});
@@ -277,10 +298,14 @@ test.cb('function as generator - generator is called with no options by default'
 		t.is(optionOne, 'optionOneDefaultValue');
 		t.is(optionTwo, 'optionTwoDefaultValue');
 
-		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-default-options run-generator will`,
-			`run the generator "generator" with the options {}.`
-		)+nl);
+		const logMessage = logs.willRunGenerator({
+			cli: { name: 'nosg-test-default-options' },
+			command: 'run-generator',
+			generator: 'generator',
+			options: {}
+		});
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\n`);
 
 		generate();
 
@@ -313,10 +338,14 @@ test.cb('function as generator - generator is called with options if provided', 
 		t.is(optionOne, 'option value 1');
 		t.is(optionTwo, 'option value 2');
 
-		t.is(stdoutBuffer.join(''), msg(
-			`LOG: nosg-test-options run-generator will`,
-			`run the generator "generator" with the options {"optionOne":"option value 1","optionTwo":"option value 2"}.`
-		)+nl);
+		const logMessage = logs.willRunGenerator({
+			cli: { name: 'nosg-test-options' },
+			command: 'run-generator',
+			generator: 'generator',
+			options: {optionOne:"option value 1",optionTwo:"option value 2"}
+		});
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\n`);
 
 		generate();
 
@@ -521,10 +550,7 @@ test('Trying to use an unexistent absolute sourcesDirectory must throw error', t
 		});
 	});
 
-	t.is(unexistentAbsolutePathError.message, msg(
-		`"${unexistentAbsolutePath}" is not a valid sources directory path.`,
-		`The directory doesn't seem to exist.`
-	));
+	t.is(unexistentAbsolutePathError.message, logs.unexistentSourcesDirectory({sourcesDirectory: unexistentAbsolutePath}));
 });
 
 test('Trying to use an unexistent relative sourcesDirectory must throw error', t => {
@@ -544,9 +570,8 @@ test('Trying to use an unexistent relative sourcesDirectory must throw error', t
 	});
 
 	t.is(unexistentRelativePathError.message, msg(
-		`"${unexistentRelativePath}" is not a valid sources directory path.`,
-		`The directory doesn't seem to exist. Ensure that you are running the run-generator`,
-		`command in an appropriate current working directory.`
+		logs.unexistentSourcesDirectory({sourcesDirectory: pathFromIndex(unexistentRelativePath)}),
+		logs.ensureCurrentWorkingDirectory({command: 'run-generator'})
 	));
 });
 
@@ -566,10 +591,7 @@ test('Trying to use an absolute path to a non directory sourcesDirectory must th
 		});
 	});
 
-	t.is(notDirectoryAbsolutePathError.message, msg(
-		`"${notDirectoryAbsolutePath}" is not a valid sources directory path.`,
-		`The path was found but it's not a directory.`
-	));
+	t.is(notDirectoryAbsolutePathError.message, logs.unvalidSourcesDirectory({sourcesDirectory: notDirectoryAbsolutePath}));
 });
 
 test('Trying to use a relative path to a non directory sourcesDirectory must throw error', t => {
@@ -589,9 +611,8 @@ test('Trying to use a relative path to a non directory sourcesDirectory must thr
 	});
 
 	t.is(notDirectoryRelativePathError.message, msg(
-		`"${notDirectoryRelativePath}" is not a valid sources directory path.`,
-		`The path was found but it's not a directory. Ensure that you are running the run-generator`,
-		`command in an appropriate current working directory.`
+		logs.unvalidSourcesDirectory({sourcesDirectory: pathFromIndex(notDirectoryRelativePath)}),
+		logs.ensureCurrentWorkingDirectory({command: 'run-generator'})
 	));
 });
 
@@ -628,13 +649,12 @@ test.cb('timeout option - error if generator never calls the generate function',
 		}
 		catch(notCalledGenerateError){
 			errorDetected = true;
-			t.is(notCalledGenerateError.message, msg(
-				`cli-name run-generator detected an error`,
-				`in the generator "generator". The generator "generator"`,
-				`doesn't have called yet the generate function after a timeout of 100ms.`,
-				`Try to increase the timeout option when using cli-name run-generator,`,
-				`or check that the generator works correctly and actually calls the generate function.`
-			));
+			t.is(notCalledGenerateError.message, logs.generateNotCalledTimeout({
+				cli: { name: 'cli-name' },
+				command: 'run-generator',
+				generator: 'generator',
+				timeout: 100
+			}));
 		}
 	})();
 });
@@ -670,13 +690,12 @@ test.cb('timeout option - error if generate never emit finish', t => {
 		}
 		catch(finishEventNotEmittedError){
 			errorDetected = true;
-			t.is(finishEventNotEmittedError.message, msg(
-				`cli-name-2 run-generator detected an error`,
-				`in the generator "generator". The generator "generator"`,
-				`generate instance doesn't have emitted yet a finish event after a timeout of 100ms.`,
-				`Try to increase the timeout option when using cli-name-2 run-generator,`,
-				`or check that the generator works correctly and actually calls the generate function.`
-			));
+			t.is(finishEventNotEmittedError.message, logs.generateFinishEventNotEmittedTimeout({
+				cli: { name: 'cli-name-2' },
+				command: 'run-generator',
+				generator: 'generator',
+				timeout: 100
+			}));
 		}
 	})();
 });
@@ -700,7 +719,7 @@ test.cb('timeout default value - never calls the generate function', t => {
 	(async () => {
 		try{
 			await runGenerator({
-				generator(){ return; },
+				generator: function generator2(){ return; },
 				stdout: mockWritableStream(),
 				cli: { name: 'cli-name-def' }
 			});
@@ -708,13 +727,12 @@ test.cb('timeout default value - never calls the generate function', t => {
 		}
 		catch(notCalledGenerateError){
 			errorDetected = true;
-			t.is(notCalledGenerateError.message, msg(
-				`cli-name-def run-generator detected an error`,
-				`in the generator "generator". The generator "generator"`,
-				`doesn't have called yet the generate function after a timeout of 10000ms.`,
-				`Try to increase the timeout option when using cli-name-def run-generator,`,
-				`or check that the generator works correctly and actually calls the generate function.`
-			));
+			t.is(notCalledGenerateError.message, logs.generateNotCalledTimeout({
+				cli: { name: 'cli-name-def' },
+				command: 'run-generator',
+				generator: 'generator2',
+				timeout: 10000
+			}));
 		}
 	})();
 });
@@ -738,7 +756,7 @@ test.cb('timeout default value - generate never emit finish', t => {
 	(async () => {
 		try{
 			await runGenerator({
-				generator(generate){ generate() },
+				generator: function generator4(generate){ generate() },
 				stdout: mockWritableStream(),
 				cli: { name: 'cli-name-2-def' },
 				generate: Object.assign(function () {
@@ -748,13 +766,12 @@ test.cb('timeout default value - generate never emit finish', t => {
 		}
 		catch(finishEventNotEmittedError){
 			errorDetected = true;
-			t.is(finishEventNotEmittedError.message, msg(
-				`cli-name-2-def run-generator detected an error`,
-				`in the generator "generator". The generator "generator"`,
-				`generate instance doesn't have emitted yet a finish event after a timeout of 10000ms.`,
-				`Try to increase the timeout option when using cli-name-2-def run-generator,`,
-				`or check that the generator works correctly and actually calls the generate function.`
-			));
+			t.is(finishEventNotEmittedError.message, logs.generateFinishEventNotEmittedTimeout({
+				cli: { name: 'cli-name-2-def' },
+				command: 'run-generator',
+				generator: 'generator4',
+				timeout: 10000
+			}));
 		}
 	})();
 });
@@ -767,7 +784,6 @@ function runGeneratorWithAStringAsGeneratorMacro(t, {
 	options,
 	sourcesDirectory,
 	expectedOptions,
-	expectedStdoutBufferContent,
 	fakeSourcesParentDirectory
 }) {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
@@ -795,7 +811,7 @@ function runGeneratorWithAStringAsGeneratorMacro(t, {
 		options,
 		sourcesDirectory,
 		stdout: mockWritableStream(stdoutBuffer),
-		cli: { name: 'nosg-test' }
+		cli: { name: 'nosg-test-string' }
 	});
 
 	t.true(runGeneratorPromise instanceof Promise);
@@ -809,7 +825,21 @@ function runGeneratorWithAStringAsGeneratorMacro(t, {
 		t.is(typeof call[0], 'function');
 		t.deepEqual(call[1], expectedOptions);
 
-		t.is(stdoutBuffer.join(''), expectedStdoutBufferContent);
+		const logMessage = logs.willRunGenerator({
+			cli: {name: 'nosg-test-string'},
+			command: 'run-generator',
+			generator: generatorPath,
+			options: options || {}
+		});
+
+		const successMessage = logs.hasRunnedGenerator({
+			cli: {name: 'nosg-test-string'},
+			command: 'run-generator',
+			generator: generatorPath,
+			options: options || {}
+		});
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\n`);
 
 		t.end();
 	});
@@ -821,14 +851,7 @@ test.cb('runGenerator with a complete component path as generator', runGenerator
 	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
 	expectedOptions: {
 		sourcesDirectory: pathFromIndex('tests/mocks/sources')
-	},
-	expectedStdoutBufferContent: msg(
-		`LOG: nosg-test run-generator will`,
-		`run the generator "components-set-a/layer-a/generator-component-a" with the options {}.`
-	)+nl+msg(
-		`SUCCESS: nosg-test run-generator correctly`,
-		`runned the generator "components-set-a/layer-a/generator-component-a" with the options {}.`
-	)+nl
+	}
 });
 
 test.cb('runGenerator with a complete component path as generator and options', runGeneratorWithAStringAsGeneratorMacro, {
@@ -839,14 +862,7 @@ test.cb('runGenerator with a complete component path as generator and options', 
 	expectedOptions: {
 		sourcesDirectory: pathFromIndex('tests/mocks/sources'),
 		valueOne: 'value one'
-	},
-	expectedStdoutBufferContent: msg(
-		`LOG: nosg-test run-generator will`,
-		`run the generator "components-set-b/layer-a/generator-component-a" with the options {"valueOne":"value one"}.`
-	)+nl+msg(
-		`SUCCESS: nosg-test run-generator correctly`,
-		`runned the generator "components-set-b/layer-a/generator-component-a" with the options {"valueOne":"value one"}.`
-	)+nl
+	}
 });
 
 test.cb('runGenerator with a complete component path as generator and overriding sourcesDirectory', runGeneratorWithAStringAsGeneratorMacro, {
@@ -857,14 +873,7 @@ test.cb('runGenerator with a complete component path as generator and overriding
 	expectedOptions: {
 		sourcesDirectory: pathFromIndex('tests/mocks/sources'),
 		valueTwo: 'value two'
-	},
-	expectedStdoutBufferContent: msg(
-		`LOG: nosg-test run-generator will`,
-		`run the generator "components-set-c/layer-a/generator-component-a" with the options {"valueTwo":"value two"}.`
-	)+nl+msg(
-		`SUCCESS: nosg-test run-generator correctly`,
-		`runned the generator "components-set-c/layer-a/generator-component-a" with the options {"valueTwo":"value two"}.`
-	)+nl
+	}
 });
 
 test.todo('runGenerator with a layer/component path as generator');
@@ -933,68 +942,25 @@ function unvalidGeneratorMacro(t, unvalidValue, errorMessage){
 		})
 	});
 
-	t.is(unvalidGeneratorError.message, errorMessage);
+	t.true(unvalidGeneratorError instanceof TypeError);
+	t.is(unvalidGeneratorError.message, logs.unvalidGenerator({generator: unvalidValue}));
 }
 
 unvalidGeneratorMacro.title = providedTitle => (
 	`runGenerator with unvalid generator - ${providedTitle}`
 )
 
-test('with number', unvalidGeneratorMacro, 2, msg(
-	`2 (number) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with empty array', unvalidGeneratorMacro, [], msg(
-	`(object) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with empty object', unvalidGeneratorMacro, {}, msg(
-	`[object Object] (object) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with array', unvalidGeneratorMacro, ['value', 4], msg(
-	`value,4 (object) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with object', unvalidGeneratorMacro, {key: 'value'}, msg(
-	`[object Object] (object) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with regexp', unvalidGeneratorMacro, /regexp/, msg(
-	`/regexp/ (object) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with false', unvalidGeneratorMacro, false, msg(
-	`false (boolean) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with undefined', unvalidGeneratorMacro, undefined, msg(
-	`undefined (undefined) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with null', unvalidGeneratorMacro, null, msg(
-	`null (object) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test('with true', unvalidGeneratorMacro, true, msg(
-	`true (boolean) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
-test.skip('with symbol', unvalidGeneratorMacro, Symbol(), msg(
-	`2 (number) is not a valid generator value.`,
-	`Generator can be a function, a component path to`,
-	`a function or a Javascript Value Locator to a function.`
-));
+test('with number', unvalidGeneratorMacro, 2);
+test('with empty array', unvalidGeneratorMacro, []);
+test('with empty object', unvalidGeneratorMacro, {});
+test('with array', unvalidGeneratorMacro, ['value', 4]);
+test('with object', unvalidGeneratorMacro, {key: 'value'});
+test('with regexp', unvalidGeneratorMacro, /regexp/);
+test('with false', unvalidGeneratorMacro, false);
+test('with undefined', unvalidGeneratorMacro, undefined);
+test('with null', unvalidGeneratorMacro, null);
+test('with true', unvalidGeneratorMacro, true);
+test.skip('with symbol', unvalidGeneratorMacro, Symbol());
 
 /*---------------*/
 
@@ -1023,3 +989,6 @@ test.todo('log enhancement');
 
 test.todo('test with actual file creation');
 test.todo('test with actual file creation using a component path as generator');
+
+test.todo('should work without stdout option');
+test.todo('should work without cli option');

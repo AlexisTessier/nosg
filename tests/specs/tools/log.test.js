@@ -2,6 +2,8 @@
 
 const test = require('ava');
 
+const sinon = require('sinon');
+
 const requireFromIndex = require('../../utils/require-from-index');
 const mockWritableStream = require('../../mocks/mock-writable-stream');
 const mockReadableStream = require('../../mocks/mock-readable-stream');
@@ -22,7 +24,7 @@ test('log usage default logLevel', t => {
 
 	log(mockWritableStream(buffer), 'message');
 
-	t.deepEqual(buffer.join(''), 'LOG: message\n');
+	t.deepEqual(buffer.join(''), `LOG: message\n`);
 });
 
 test('log usage logLevel LOG', t => {
@@ -33,7 +35,7 @@ test('log usage logLevel LOG', t => {
 
 	log(mockWritableStream(buffer), 'message', LOG);
 
-	t.deepEqual(buffer.join(''), 'LOG: message\n');
+	t.deepEqual(buffer.join(''), `LOG: message\n`);
 });
 
 test('log usage logLevel NOTICE', t => {
@@ -44,7 +46,7 @@ test('log usage logLevel NOTICE', t => {
 
 	log(mockWritableStream(buffer), 'message', NOTICE);
 
-	t.deepEqual(buffer.join(''), 'NOTICE: message\n');
+	t.deepEqual(buffer.join(''), `NOTICE: message\n`);
 });
 
 test('log usage logLevel WARN', t => {
@@ -55,7 +57,7 @@ test('log usage logLevel WARN', t => {
 
 	log(mockWritableStream(buffer), 'message', WARN);
 
-	t.deepEqual(buffer.join(''), 'WARN: message\n');
+	t.deepEqual(buffer.join(''), `WARN: message\n`);
 });
 
 test('log usage logLevel SUCCESS', t => {
@@ -66,7 +68,7 @@ test('log usage logLevel SUCCESS', t => {
 
 	log(mockWritableStream(buffer), 'message', SUCCESS);
 
-	t.deepEqual(buffer.join(''), 'SUCCESS: message\n');
+	t.deepEqual(buffer.join(''), `SUCCESS: message\n`);
 });
 
 test('log.notice usage', t => {
@@ -76,7 +78,7 @@ test('log.notice usage', t => {
 
 	log.notice(mockWritableStream(buffer), 'notice message');
 
-	t.deepEqual(buffer.join(''), 'NOTICE: notice message\n');
+	t.deepEqual(buffer.join(''), `NOTICE: notice message\n`);
 });
 
 test('log.warn usage', t => {
@@ -86,7 +88,7 @@ test('log.warn usage', t => {
 
 	log.warn(mockWritableStream(buffer), 'warn message');
 
-	t.deepEqual(buffer.join(''), 'WARN: warn message\n');
+	t.deepEqual(buffer.join(''), `WARN: warn message\n`);
 });
 
 test('log.success usage', t => {
@@ -96,49 +98,101 @@ test('log.success usage', t => {
 
 	log.success(mockWritableStream(buffer), 'success message');
 
-	t.deepEqual(buffer.join(''), 'SUCCESS: success message\n');
+	t.deepEqual(buffer.join(''), `SUCCESS: success message\n`);
 });
 
 /*-----------*/
 
-test('log unvalid stdout parameter', t => {
+test('log should throw an error if stdout is not a writable stream', t => {
 	const log = requireFromIndex('sources/tools/log');
 
-	const err = t.throws(() => {
-		log(mockReadableStream());
+	const write = sinon.spy();
+
+	const notWritableStreamError = t.throws(() => {
+		log(Object.assign(mockReadableStream(), {
+			write
+		}));
 	});
 
-	t.is(err.message, 'stdout must be a writable stream');
+	t.true(write.notCalled);
+	t.is(notWritableStreamError.message, `stdout must be a writable stream or eventually undefined`);
 });
 
-test('log.notice unvalid stdout parameter', t => {
+test('log undefined stdout parameter', t => {
 	const log = requireFromIndex('sources/tools/log');
 
-	const err = t.throws(() => {
-		log.notice(mockReadableStream());
+	t.notThrows(() => {
+		log(undefined);
 	});
-
-	t.is(err.message, 'stdout must be a writable stream');
 });
 
-test('log.warn unvalid stdout parameter', t => {
+test('log.notice should throw an error if stdout is not a writable stream', t => {
 	const log = requireFromIndex('sources/tools/log');
 
-	const err = t.throws(() => {
-		log.warn(mockReadableStream());
+	const write = sinon.spy();
+
+	const notWritableStreamError = t.throws(() => {
+		log.notice(Object.assign(mockReadableStream(), {
+			write
+		}));
 	});
 
-	t.is(err.message, 'stdout must be a writable stream');
+	t.true(write.notCalled);
+	t.is(notWritableStreamError.message, `stdout must be a writable stream or eventually undefined`);
 });
 
-test('log.success unvalid stdout parameter', t => {
+test('log.notice undefined stdout parameter', t => {
 	const log = requireFromIndex('sources/tools/log');
 
-	const err = t.throws(() => {
-		log.success(mockReadableStream());
+	t.notThrows(() => {
+		log.notice(undefined);
+	});
+});
+
+test('log.warn should throw an error if stdout is not a writable stream', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	const write = sinon.spy();
+
+	const notWritableStreamError = t.throws(() => {
+		log.warn(Object.assign(mockReadableStream(), {
+			write
+		}));
 	});
 
-	t.is(err.message, 'stdout must be a writable stream');
+	t.true(write.notCalled);
+	t.is(notWritableStreamError.message, `stdout must be a writable stream or eventually undefined`);
+});
+
+test('log.warn undefined stdout parameter', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	t.notThrows(() => {
+		log.warn(undefined);
+	});
+});
+
+test('log.success should throw an error if stdout is not a writable stream', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	const write = sinon.spy();
+
+	const notWritableStreamError = t.throws(() => {
+		log.success(Object.assign(mockReadableStream(), {
+			write
+		}));
+	});
+
+	t.true(write.notCalled);
+	t.is(notWritableStreamError.message, `stdout must be a writable stream or eventually undefined`);
+});
+
+test('log.success undefined stdout parameter', t => {
+	const log = requireFromIndex('sources/tools/log');
+
+	t.notThrows(() => {
+		log.success(undefined);
+	});
 });
 
 test('log unvalid message parameter', t => {
