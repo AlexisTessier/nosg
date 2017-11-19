@@ -20,18 +20,15 @@ test('Type', t => {
 function usageMacro(t, {
 	componentPath,
 	expectedResult,
-	sourcesDirectory,
-	fakeSourcesParentDirectory
+	sourcesDirectory
 }) {
 	const listMatchingFilepaths = requireFromIndex('sources/commands/list-matching-filepaths.command');
 	const stdoutBuffer = [];
 
-	if (fakeSourcesParentDirectory) {
-		const cwd = sinon.stub(process, 'cwd').callsFake(() => {
-			cwd.restore();
-			return fakeSourcesParentDirectory;
-		});
-	}
+	const cwd = sinon.stub(process, 'cwd').callsFake(() => {
+		cwd.restore();
+		return pathFromIndex('tests/mocks');
+	});
 
 	const listMatchingFilepathsResult = listMatchingFilepaths({
 		componentPath,
@@ -51,71 +48,131 @@ function usageMacro(t, {
 
 test('usage with a complete component path', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a',
-	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
 	expectedResult: [
 		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
-	]
-});
-test('usage with a complete component path matching a directory with a index.js in it', usageMacro, {
-	componentPath: 'components-set-a/layer-a/component-i',
-	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
-	expectedResult: [
-		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-i/index.js')
 	]
 });
 test('usage with a complete component path and overriding sourcesDirectory', usageMacro, {
 	componentPath: 'components-set-b/layer-a/custom-component-a',
 	sourcesDirectory: 'custom-src-dir',
-	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
 	expectedResult: [
 		pathFromIndex('tests/mocks/custom-src-dir/components-set-b/layer-a/custom-component-a.js')
 	]
 });
+test('usage with a complete component path matching a directory with a index.js in it', usageMacro, {
+	componentPath: 'components-set-a/layer-a/component-i',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-i/index.js')
+	]
+});
 test('usage with a complete component path - matching no file', usageMacro, {
 	componentPath: 'components-set-a/layer-w/component-x',
-	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
 	expectedResult: []
 });
 test('usage with a complete component path - matching no file (try with a matching directory without index.js in it)', usageMacro, {
 	componentPath: 'components-set-d/layer-a/component-f-dir',
-	fakeSourcesParentDirectory: pathFromIndex('tests/mocks'),
 	expectedResult: []
 });
-test.todo('usage with a complete component path - matching no file (try with a matching no js file)');
-test.todo('usage with a complete component path - matching no file (try with a matching extensionless file)');
-test.todo('usage with a complete component path - matching more than one file');
+test('usage with a complete component path - matching no file (try with a matching no js file)', usageMacro, {
+	componentPath: 'components-set-a/layer-a/component-no-js',
+	expectedResult: []
+});
+test('usage with a complete component path with extension - matching no file (try with a matching no js file)', usageMacro, {
+	componentPath: 'components-set-a/layer-a/component-no-js.txt',
+	expectedResult: []
+});
+test('usage with a complete component path - matching no file (try with a matching extensionless file)', usageMacro, {
+	componentPath: 'components-set-a/layer-a/component-no-ext',
+	expectedResult: []
+});
+test('usage with a complete component path - matching more than one file', usageMacro, {
+	componentPath: 'components-set-d/layer-double/component-double',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double.js'),
+		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double/index.js')
+	]
+});
 
-test.todo('usage with a layer/component path');
-test.todo('usage with a layer/component path and overriding sourcesDirectory');
+test('usage with a layer/component path', usageMacro, {
+	componentPath: 'layer-a/comp-from-layer',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/comp-set-layer/layer-a/comp-from-layer.js')
+	]
+});
+test('usage with a layer/component path and overriding sourcesDirectory', usageMacro, {
+	componentPath: 'layer-a/comp-from-layer',
+	sourcesDirectory: 'custom-src-dir',
+	expectedResult: [
+		pathFromIndex('tests/mocks/custom-src-dir/comp-set-layer/layer-a/comp-from-layer.js')
+	]
+});
+test.todo('usage with a layer/component path matching a directory with a index.js in it');
 test.todo('usage with a layer/component path - matching no file');
+test.todo('usage with a layer/component path - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with a layer/component path - matching no file (try with a matching no js file)');
+test.todo('usage with a layer/component path with extension - matching no file (try with a matching no js file)');
+test.todo('usage with a layer/component path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a layer/component path - matching more than one file');
 
 test.todo('usage with a set:component path');
 test.todo('usage with a set:component path and overriding sourcesDirectory');
+test.todo('usage with a set:component path matching a directory with a index.js in it');
 test.todo('usage with a set:component path - matching no file');
+test.todo('usage with a set:component path - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with a set:component path - matching no file (try with a matching no js file)');
+test.todo('usage with a set:component path with extension - matching no file (try with a matching no js file)');
+test.todo('usage with a set:component path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a set:component path - matching more than one file');
 
 test.todo('usage with a component name');
 test.todo('usage with a component name and overriding sourcesDirectory');
+test.todo('usage with a component name matching a directory with a index.js in it');
 test.todo('usage with a component name - matching no file');
+test.todo('usage with a component name - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with a component name - matching no file (try with a matching no js file)');
+test.todo('usage with a component name with extension - matching no file (try with a matching no js file)');
+test.todo('usage with a component name - matching no file (try with a matching extensionless file)');
 test.todo('usage with a component name - matching more than one file');
 
 test.todo('usage with a nested component path');
 test.todo('usage with a nested component path and overriding sourcesDirectory');
-test.todo('usage with a nested component path');
+test.todo('usage with a nested component path matching a directory with a index.js in it');
 test.todo('usage with a nested component path - matching no file');
+test.todo('usage with a nested component path - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with a nested component path - matching no file (try with a matching no js file)');
+test.todo('usage with a nested component path with extension - matching no file (try with a matching no js file)');
+test.todo('usage with a nested component path - matching no file (try with a matching extensionless file)');
+test.todo('usage with a nested component path - matching more than one file');
 
-/*--------------------------*/
+test.todo('usage with an absolute component path');
+test.todo('usage with an absolute component path and overriding sourcesDirectory');
+test.todo('usage with an absolute component path matching a directory with a index.js in it');
+test.todo('usage with an absolute component path - matching no file');
+test.todo('usage with an absolute component path - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with an absolute component path - matching no file (try with a matching no js file)');
+test.todo('usage with an absolute component path with extension - matching no file (try with a matching no js file)');
+test.todo('usage with an absolute component path - matching no file (try with a matching extensionless file)');
+test.todo('usage with an absolute component path - matching more than one file');
 
-test.todo('usage with an absolute Javascript Value Locator (string)');
-test.todo('usage with a relative Javascript Value Locator (string)');
-test.todo('usage with an absolute Javascript Value Locator (string) - matching no file');
-test.todo('usage with a relative Javascript Value Locator (string) - matching no file');
+test.todo('usage with an absolute component glob');
+test.todo('usage with an absolute component glob and overriding sourcesDirectory');
+test.todo('usage with an absolute component glob matching a directory with a index.js in it');
+test.todo('usage with an absolute component glob - matching no file');
+test.todo('usage with an absolute component glob - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with an absolute component glob - matching no file (try with a matching no js file)');
+test.todo('usage with an absolute component glob with extension - matching no file (try with a matching no js file)');
+test.todo('usage with an absolute component glob - matching no file (try with a matching extensionless file)');
+test.todo('usage with an absolute component glob - matching more than one file');
 
-test.todo('usage with an absolute Javascript Value Locator (object)');
-test.todo('usage with a relative Javascript Value Locator (object)');
-test.todo('usage with an absolute Javascript Value Locator (object) - matching no file');
-test.todo('usage with a relative Javascript Value Locator (object) - matching no file');
+test.todo('usage with a relative component glob');
+test.todo('usage with a relative component glob and overriding sourcesDirectory');
+test.todo('usage with a relative component glob matching a directory with a index.js in it');
+test.todo('usage with a relative component glob - matching no file');
+test.todo('usage with a relative component glob - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with a relative component glob - matching no file (try with a matching no js file)');
+test.todo('usage with a relative component glob with extension - matching no file (try with a matching no js file)');
+test.todo('usage with a relative component glob - matching no file (try with a matching extensionless file)');
+test.todo('usage with a relative component glob - matching more than one file');
 
 /*--------------------------*/
 

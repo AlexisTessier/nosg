@@ -28,10 +28,23 @@ function listMatchingFilepathsCommand({
 }) {
 	sourcesDirectory = checkSourcesDirectory({sourcesDirectory});
 
-	const matchingFilepaths = []; [
-		`${path.join(sourcesDirectory, componentPath)}.js`,
-		`${path.join(sourcesDirectory, componentPath)}/index.js`
-	].forEach(pattern => matchingFilepaths.push(...glob.sync(pattern, {nodir: true})))
+	const sep = '/';
+
+	const splittedComponentPath = componentPath.split(sep);
+
+	if (splittedComponentPath.length === 2) {
+		splittedComponentPath.unshift('*');
+	}
+
+	const patternComponentPath = splittedComponentPath.join(sep);
+	
+	const patterns = [
+		`${path.join(sourcesDirectory, patternComponentPath)}.js`,
+		`${path.join(sourcesDirectory, patternComponentPath)}/index.js`
+	];
+
+	const matchingFilepaths = [];
+	patterns.forEach(pattern => matchingFilepaths.push(...glob.sync(pattern, {nodir: true})))
 
 	log(stdout, [
 		`List of filepaths matching "${componentPath}":`,
