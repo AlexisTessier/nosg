@@ -51,7 +51,7 @@ Returns **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refer
 
 ### list-matching-filepaths
 
-Take a nosg component path and return the list of matching filepaths.
+Take a nosg component path and list the matching filepaths.
 
 **Parameters**
 
@@ -59,7 +59,7 @@ Take a nosg component path and return the list of matching filepaths.
     -   `options.componentPath` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** The nosg component path from which find the matching filepaths.
     -   `options.sourcesDirectory` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** The path to the sources directory of the nosg project to use.
 
-Returns **[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)** An array of filepaths matching the component path
+Returns **[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)** An promise resolving an array of filepaths matching the component path.
 
 ### run-generator
 

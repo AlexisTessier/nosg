@@ -27,7 +27,7 @@ const log = require('../tools/log');
 function checkSourcesDirectoryCommand({
 	sourcesDirectory = defaultOptions.sourcesDirectory,
 	stdout
-} = {}) {
+}) {
 	const options = arguments[0];
 	if(typeof options !== 'object' || Array.isArray(options)){
 		throw new TypeError(`${options} (${typeof options}) is not a valid option object.`);
