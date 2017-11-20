@@ -129,7 +129,12 @@ test.todo('usage with a set:component path with extension - matching no file (tr
 test.todo('usage with a set:component path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a set:component path - matching more than one file');
 
-test.todo('usage with a component name');
+test('usage with a component name', usageMacro, {
+	componentPath: 'unique-component',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/unique-component.js')
+	]
+});
 test.todo('usage with a component name and overriding sourcesDirectory');
 test.todo('usage with a component name matching a directory with a index.js in it');
 test.todo('usage with a component name - matching no file');

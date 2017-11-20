@@ -36,7 +36,10 @@ function listMatchingFilepathsCommand({
 		.replace(setSep, [pathSep, joker, pathSep].join(''))
 		.split(pathSep);
 
-	if (splittedComponentPath.length === 2) {
+	if (splittedComponentPath.length === 1) {
+		splittedComponentPath.unshift(joker, joker);
+	}
+	else if (splittedComponentPath.length === 2) {
 		splittedComponentPath.unshift(joker);
 	}
 
