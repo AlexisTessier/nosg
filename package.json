@@ -78,7 +78,7 @@
     "ava": "0.23.0",
     "better-assert": "1.0.2",
     "capitalize": "1.0.0",
-    "concurrently": "3.5.0",
+    "concurrently": "3.5.1",
     "coveralls": "3.0.0",
     "dashify": "0.2.2",
     "dependency-check": "2.9.1",
