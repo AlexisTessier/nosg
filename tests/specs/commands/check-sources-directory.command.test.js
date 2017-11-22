@@ -173,22 +173,22 @@ function unvalidParametersMacro(t, unvalidParameters, errorMessage) {
 	t.is(unvalidParametersError.message, errorMessage);
 }
 
-test('usage with unvalid parameters - number', unvalidParametersMacro, [42], 
+test('usage with unvalid parameters - number', unvalidParametersMacro, [42],
 	`42 (number) is not a valid option object.`
 );
-test('usage with unvalid parameters - string', unvalidParametersMacro, ["hello"], 
+test('usage with unvalid parameters - string', unvalidParametersMacro, ["hello"],
 	`hello (string) is not a valid option object.`
 );
-test('usage with unvalid parameters - true', unvalidParametersMacro, [true], 
+test('usage with unvalid parameters - true', unvalidParametersMacro, [true],
 	`true (boolean) is not a valid option object.`
 );
-test('usage with unvalid parameters - false', unvalidParametersMacro, [false], 
+test('usage with unvalid parameters - false', unvalidParametersMacro, [false],
 	`false (boolean) is not a valid option object.`
 );
-test('usage with unvalid parameters - function', unvalidParametersMacro, [function notObject(){return;}], 
+test('usage with unvalid parameters - function', unvalidParametersMacro, [function notObject(){return;}],
 	`function notObject() {\n\treturn;\n} (function) is not a valid option object.`
 );
-test('usage with unvalid parameters - array', unvalidParametersMacro, [[]], 
+test('usage with unvalid parameters - array', unvalidParametersMacro, [[]],
 	` (object) is not a valid option object.`
 );
 

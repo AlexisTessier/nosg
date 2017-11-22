@@ -359,7 +359,7 @@ test.skip('Trying to use an unexistent absolute sourcesDirectory must throw erro
 		});
 	});
 
-	t.is(unexistentAbsolutePathError.message, logs.unexistentSourcesDirectory({sourcesDirectory: unexistentAbsolutePath}));
+	//t.is(unexistentAbsolutePathError.message, logs.unexistentSourcesDirectory({sourcesDirectory: unexistentAbsolutePath}));
 });
 
 test.skip('Trying to use an unexistent relative sourcesDirectory must throw error', t => {
@@ -378,10 +378,10 @@ test.skip('Trying to use an unexistent relative sourcesDirectory must throw erro
 		});
 	});
 
-	t.is(unexistentRelativePathError.message, msg(
-		logs.unexistentSourcesDirectory({sourcesDirectory: pathFromIndex(unexistentRelativePath)}),
-		logs.ensureCurrentWorkingDirectory()
-	));
+	// t.is(unexistentRelativePathError.message, msg(
+	// 	logs.unexistentSourcesDirectory({sourcesDirectory: pathFromIndex(unexistentRelativePath)}),
+	// 	logs.ensureCurrentWorkingDirectory()
+	// ));
 });
 
 test.skip('Trying to use an absolute path to a non directory sourcesDirectory must throw error', t => {
@@ -400,7 +400,7 @@ test.skip('Trying to use an absolute path to a non directory sourcesDirectory mu
 		});
 	});
 
-	t.is(notDirectoryAbsolutePathError.message, logs.unvalidSourcesDirectory({sourcesDirectory: notDirectoryAbsolutePath}));
+	//t.is(notDirectoryAbsolutePathError.message, logs.unvalidSourcesDirectory({sourcesDirectory: notDirectoryAbsolutePath}));
 });
 
 test.skip('Trying to use a relative path to a non directory sourcesDirectory must throw error', t => {
@@ -419,10 +419,10 @@ test.skip('Trying to use a relative path to a non directory sourcesDirectory mus
 		});
 	});
 
-	t.is(notDirectoryRelativePathError.message, msg(
-		logs.unvalidSourcesDirectory({sourcesDirectory: pathFromIndex(notDirectoryRelativePath)}),
-		logs.ensureCurrentWorkingDirectory()
-	));
+	// t.is(notDirectoryRelativePathError.message, msg(
+	// 	logs.unvalidSourcesDirectory({sourcesDirectory: pathFromIndex(notDirectoryRelativePath)}),
+	// 	logs.ensureCurrentWorkingDirectory()
+	// ));
 });
 
 /*--------------------------*/
@@ -448,7 +448,7 @@ test.cb('should reject when error in glob', t => {
 		consoleError.restore();
 		t.fail();
 	});
-	
+
 	const listMatchingFilepaths = requireFromIndex('sources/commands/list-matching-filepaths.command');
 
 	const listMatchingFilepathsPromise = listMatchingFilepaths({

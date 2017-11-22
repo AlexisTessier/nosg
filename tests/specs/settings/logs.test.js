@@ -144,17 +144,13 @@ test('willRunGenerator', t => {
 		command: 'command-test',
 		generator: 'path-to-generator',
 		options: '{}'
-	}),
-		`cli-test command-test will run the generator "path-to-generator" with the options "{}".`
-	);
+	}), `cli-test command-test will run the generator "path-to-generator" with the options "{}".`);
 
 	t.is(logs.willRunGenerator({
 		command: 'command-test-2',
 		generator: function generatorName2(){return;},
 		options: '{key: 42}'
-	}),
-		`undefined command-test-2 will run the generator "generatorName2" with the options "{key: 42}".`
-	);
+	}), `undefined command-test-2 will run the generator "generatorName2" with the options "{key: 42}".`);
 });
 
 test('hasRunnedGenerator', t => {
@@ -166,17 +162,13 @@ test('hasRunnedGenerator', t => {
 		command: 'command-test',
 		generator: 'path-to-generator',
 		options: '{}'
-	}),
-		`cli-test command-test correctly runned the generator "path-to-generator" with the options "{}".`
-	);
+	}), `cli-test command-test correctly runned the generator "path-to-generator" with the options "{}".`);
 
 	t.is(logs.hasRunnedGenerator({
 		command: 'command-test-2',
 		generator: function generatorName2(){return;},
 		options: '{key: 42}'
-	}),
-		`undefined command-test-2 correctly runned the generator "generatorName2" with the options "{key: 42}".`
-	);
+	}), `undefined command-test-2 correctly runned the generator "generatorName2" with the options "{key: 42}".`);
 });
 
 test('validSourcesDirectory', t => {
@@ -185,13 +177,9 @@ test('validSourcesDirectory', t => {
 	t.is(typeof logs.validSourcesDirectory, 'function');
 	t.is(logs.validSourcesDirectory({
 		sourcesDirectory: 'hello'
-	}),
-		`The sources directory at path "hello" is valid.`
-	);
+	}), `The sources directory at path "hello" is valid.`);
 
 	t.is(logs.validSourcesDirectory({
 		sourcesDirectory: 42
-	}),
-		`The sources directory at path "42" is valid.`
-	);
+	}), `The sources directory at path "42" is valid.`);
 });

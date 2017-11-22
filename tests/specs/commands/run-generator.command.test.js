@@ -233,7 +233,7 @@ test.cb('must bind only one finish event from generate', t => {
 
 			t.is(onEvent, 'finish');
 			t.is(typeof onHandler, 'function');
-			
+
 			t.is(offArgs.length, 0);
 
 			generate();
@@ -683,8 +683,7 @@ test.cb('timeout option - error if generate never emit finish', t => {
 				timeout: 100,
 				stdout: mockWritableStream(),
 				cli: { name: 'cli-name-2' },
-				generate: Object.assign(function () {
-				}, { on(){return;} })
+				generate: Object.assign(function g() {return;}, { on(){return;} })
 			});
 			t.fail();
 		}
@@ -759,8 +758,7 @@ test.cb.skip('timeout default value - generate never emit finish', t => {
 				generator: function generator4(generate){ generate() },
 				stdout: mockWritableStream(),
 				cli: { name: 'cli-name-2-def' },
-				generate: Object.assign(function () {
-				}, { on(){return;} })
+				generate: Object.assign(function g() {return;}, { on(){return;} })
 			});
 			t.fail();
 		}
@@ -829,14 +827,14 @@ function runGeneratorWithAStringAsGeneratorMacro(t, {
 			cli: {name: 'nosg-test-string'},
 			command: 'run-generator',
 			generator: generatorPath,
-			options: options || {}
+			options: options || {}
 		});
 
 		const successMessage = logs.hasRunnedGenerator({
 			cli: {name: 'nosg-test-string'},
 			command: 'run-generator',
 			generator: generatorPath,
-			options: options || {}
+			options: options || {}
 		});
 
 		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\n`);

@@ -11,13 +11,13 @@ const checkSourcesDirectory = require('./check-sources-directory.command');
 /**
  * @name get-component
  *
- * @description Take a nosg component path and find the matching component filepath.
+ * @description Take a nosg component path and find the matching component.
  *
  * @param {object} options An object containing the command options.
  * @param {string} options.componentPath The nosg component path to use.
  * @param {string} options.sourcesDirectory The path to the sources directory of the nosg project to use.
  *
- * @returns {Promise} An promise resolving the component or rejecting an error if more than one filepath seems to match the nosg component path.
+ * @returns {Promise} An promise resolving the component.
  */
 function listMatchingFilepathsCommand({
 	componentPath,
