@@ -13,36 +13,59 @@ test('Type', t => {
 	const getComponent = requireFromIndex('sources/commands/get-component.command');
 
 	t.is(typeof getComponent, 'function');
+	t.is(getComponent.name, 'getComponentCommand');
 });
 
-function usageMacro() {
-	return;
+async function usageMacro(t, {
+	componentPath,
+	expectedResultPath,
+	sourcesDirectory,
+	stdout = true
+}) {
+	const getComponent = requireFromIndex('sources/commands/get-component.command');
+	const stdoutBuffer = [];
+
+	const expectedResult = require(expectedResultPath);
+	t.is(typeof expectedResult, 'function');
+
+	const cwd = sinon.stub(process, 'cwd').callsFake(() => {
+		cwd.restore();
+		return pathFromIndex('tests/mocks');
+	});
+
+	const getComponentPromise = getComponent({
+		componentPath,
+		sourcesDirectory,
+		stdout: stdout ? mockWritableStream(stdoutBuffer) : undefined
+	});
+
+	t.true(getComponentPromise instanceof Promise);
+
+	const getComponentPromiseResult = await getComponentPromise;
+
+	t.is(getComponentPromiseResult, expectedResult);
+
+	t.is(stdoutBuffer.join(''), !stdout ? '' :
+		`LOG: Component "${componentPath}" found at path "${expectedResultPath}"\n`
+	);
 }
 
-test.skip('usage with a complete component path', usageMacro, {
+test('usage with a complete component path', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a',
-	expectedResult: [
-		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
-	]
+	expectedResultPath: pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
 });
-test.skip('usage with a complete component path with .js extension', usageMacro, {
+test('usage with a complete component path with .js extension', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a.js',
-	expectedResult: [
-		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
-	]
+	expectedResultPath: pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
 });
-test.skip('usage with a complete component path with no js extension', usageMacro, {
+test('usage with a complete component path with no js extension', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a.txt',
-	expectedResult: [
-		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.txt.js')
-	]
+	expectedResultPath: pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.txt.js')
 });
-test.skip('usage with a complete component path and overriding sourcesDirectory', usageMacro, {
+test('usage with a complete component path and overriding sourcesDirectory', usageMacro, {
 	componentPath: 'components-set-b/layer-a/custom-component-a',
 	sourcesDirectory: 'custom-src-dir',
-	expectedResult: [
-		pathFromIndex('tests/mocks/custom-src-dir/components-set-b/layer-a/custom-component-a.js')
-	]
+	expectedResultPath: pathFromIndex('tests/mocks/custom-src-dir/components-set-b/layer-a/custom-component-a.js')
 });
 test.skip('usage with a complete component path matching a directory with a index.js in it', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-i',

@@ -14,6 +14,7 @@ test('Type', t => {
 	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');
 
 	t.is(typeof checkSourcesDirectory, 'function');
+	t.is(checkSourcesDirectory.name, 'checkSourcesDirectoryCommand');
 });
 
 test('usage with an absolute valid sources directory', t => {

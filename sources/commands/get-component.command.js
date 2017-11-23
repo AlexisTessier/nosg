@@ -6,7 +6,7 @@ const defaultOptions = require('../settings/default-options');
 
 const log = require('../tools/log');
 
-const checkSourcesDirectory = require('./check-sources-directory.command');
+const listMatchingFilepaths = require('./list-matching-filepaths.command');
 
 /**
  * @name get-component
@@ -19,12 +19,21 @@ const checkSourcesDirectory = require('./check-sources-directory.command');
  *
  * @returns {Promise} An promise resolving the component.
  */
-function listMatchingFilepathsCommand({
+function getComponentCommand({
 	componentPath,
 	sourcesDirectory = defaultOptions.sourcesDirectory,
 	stdout
 }) {
-	sourcesDirectory = checkSourcesDirectory({sourcesDirectory});
+	return listMatchingFilepaths({
+		componentPath,
+		sourcesDirectory
+	}).then(filepaths => {
+		const fullComponentPath = filepaths[0];
+
+		log(stdout, `Component "${componentPath}" found at path "${fullComponentPath}"`);
+
+		return require(fullComponentPath);
+	});
 }
 
-module.exports = listMatchingFilepathsCommand;
+module.exports = getComponentCommand;

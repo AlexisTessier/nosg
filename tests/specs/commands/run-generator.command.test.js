@@ -21,6 +21,7 @@ test('Type', t => {
 	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
 
 	t.is(typeof runGenerator, 'function');
+	t.is(runGenerator.name, 'runGeneratorCommand');
 });
 
 /*---------------*/

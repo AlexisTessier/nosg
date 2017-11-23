@@ -13,6 +13,7 @@ test('Type', t => {
 	const listMatchingFilepaths = requireFromIndex('sources/commands/list-matching-filepaths.command');
 
 	t.is(typeof listMatchingFilepaths, 'function');
+	t.is(listMatchingFilepaths.name, 'listMatchingFilepathsCommand');
 });
 
 /*--------------------------*/
