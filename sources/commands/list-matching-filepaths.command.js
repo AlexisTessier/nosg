@@ -21,16 +21,14 @@ const joker = '*';
  *
  * @param {object} options An object containing the command options.
  * @param {string} options.componentPath The nosg component path from which find the matching filepaths.
- * @param {string} options.layer A layer name. If used, only the component path which are from this layer will be listed.
- * @param {string} options.componentsSet A components set name. If used, only the component path which are from this components set will be listed.
+ * @param {string} options.layer A layer name. If used and componentPath is not absolute, only the filepaths which are from this layer will be listed. Can't be used with an absolute componentPath option.
  * @param {string} options.sourcesDirectory The path to the sources directory of the nosg project to use.
  *
  * @returns {Promise} A promise resolving an array of filepaths matching the component path.
  */
 function listMatchingFilepathsCommand({
 	componentPath,
-	layer = '',
-	componentsSet = '',
+	layer,
 	sourcesDirectory = defaultOptions.sourcesDirectory,
 	stdout
 }) {
@@ -45,7 +43,9 @@ function listMatchingFilepathsCommand({
 	}
 
 	const patternComponentPath = splittedComponentPath.join(pathSep);
-	const fullPatternPath = path.isAbsolute(patternComponentPath)
+	const useAbsoluteComponentPath = path.isAbsolute(patternComponentPath);
+
+	const fullPatternPath = useAbsoluteComponentPath
 		? patternComponentPath
 		: path.join(sourcesDirectory, patternComponentPath);
 
@@ -76,7 +76,7 @@ function listMatchingFilepathsCommand({
 			uniqFilter.push(filepath);
 			return uniq;
 		}).filter(filepath => {
-			if (typeof layer === 'string' && layer.trim().length > 0) {
+			if (layer && !useAbsoluteComponentPath) {
 				const relativeToSourceComponentPath = path.relative(sourcesDirectory, filepath);
 				const fileLayer = relativeToSourceComponentPath.split(pathSep)[1];
 

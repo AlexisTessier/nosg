@@ -47,14 +47,16 @@ async function usageMacro(t, {
 	const listMatchingFilepathsResult = await listMatchingFilepathsPromise;
 
 	t.true(listMatchingFilepathsResult instanceof Array);
-	t.deepEqual(listMatchingFilepathsResult, expectedResult);
+	t.deepEqual(listMatchingFilepathsResult, expectedResult.sort());
 
 	t.is(stdoutBuffer.join(''), !stdout ? '' : [
 		`LOG: List of filepaths matching "${componentPath}":`,
-		...expectedResult.map(res => `\t- "${res}"`),
+		...expectedResult.sort().map(res => `\t- "${res}"`),
 		''
 	].join('\n'));
 }
+
+/*------------------*/
 
 test('usage with a complete component path', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a',
@@ -114,6 +116,21 @@ test('usage with a complete component path - matching more than one file', usage
 		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double/index.js')
 	]
 });
+test('usage with a complete component path and layer option - results', usageMacro, {
+	componentPath: 'components-set-d/layer-double/component-double',
+	layer: 'layer-double',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double.js'),
+		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double/index.js')
+	]
+});
+test('usage with a complete component path and layer option - no results', usageMacro, {
+	componentPath: 'components-set-d/layer-double/component-double',
+	layer: 'layer-a',
+	expectedResult: []
+});
+
+/*------------------*/
 
 test('usage with a layer/component path', usageMacro, {
 	componentPath: 'layer-a/comp-from-layer',
@@ -136,6 +153,8 @@ test.todo('usage with a layer/component path with extension - matching no file (
 test.todo('usage with a layer/component path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a layer/component path - matching more than one file');
 
+/*------------------*/
+
 test('usage with a set:component path', usageMacro, {
 	componentPath: 'comp-set-layer:comp-from-layer',
 	expectedResult: [
@@ -156,14 +175,20 @@ test('usage with a set:component path - matching more than one file', usageMacro
 		pathFromIndex('tests/mocks/sources/components-set-a/layer-b/component-a.js')
 	]
 });
-test('usage with a set:component path and layer option', usageMacro, {
+test('usage with a set:component path and layer option - results', usageMacro, {
 	componentPath: 'components-set-a:component-a',
 	layer: 'layer-a',
 	expectedResult: [
 		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
 	]
 });
+test('usage with a set:component path and layer option - no results', usageMacro, {
+	componentPath: 'components-set-a:component-a',
+	layer: 'layer-x',
+	expectedResult: []
+});
 
+/*------------------*/
 
 test('usage with a set/*/component path', usageMacro, {
 	componentPath: 'comp-set-layer/*/comp-from-layer',
@@ -185,13 +210,20 @@ test('usage with a set/*/component path - matching more than one file', usageMac
 		pathFromIndex('tests/mocks/sources/components-set-a/layer-b/component-a.js')
 	]
 });
-test('usage with a set/*/component path and layer option', usageMacro, {
+test('usage with a set/*/component path and layer option - results', usageMacro, {
 	componentPath: 'components-set-a/*/component-a',
 	layer: 'layer-b',
 	expectedResult: [
 		pathFromIndex('tests/mocks/sources/components-set-a/layer-b/component-a.js')
 	]
 });
+test('usage with a set/*/component path and layer option - no result', usageMacro, {
+	componentPath: 'components-set-a/*/component-a',
+	layer: 'layer-xx',
+	expectedResult: []
+});
+
+/*------------------*/
 
 test('usage with a set:component/nested path', usageMacro, {
 	componentPath: 'with-nested-path:nested-component/deep',
@@ -208,6 +240,8 @@ test.todo('usage with a set:component/nested path with extension - matching no f
 test.todo('usage with a set:component/nested path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a set:component/nested path - matching more than one file');
 
+/*------------------*/
+
 test('usage with a set:component/deep/nested path', usageMacro, {
 	componentPath: 'with-nested-path:nested-component/nested-deep-component/deep-deep',
 	expectedResult: [
@@ -222,6 +256,8 @@ test.todo('usage with a set:component/nested path - matching no file (try with a
 test.todo('usage with a set:component/nested path with extension - matching no file (try with a matching no js file)');
 test.todo('usage with a set:component/nested path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a set:component/nested path - matching more than one file');
+
+/*------------------*/
 
 test('usage with a component name', usageMacro, {
 	componentPath: 'unique-component',
@@ -238,6 +274,8 @@ test.todo('usage with a component name with extension - matching no file (try wi
 test.todo('usage with a component name - matching no file (try with a matching extensionless file)');
 test.todo('usage with a component name - matching more than one file');
 
+/*------------------*/
+
 test('usage with a nested component path', usageMacro, {
 	componentPath: 'with-nested-path/nested-layer/nested-component/deep',
 	expectedResult: [
@@ -252,6 +290,8 @@ test.todo('usage with a nested component path - matching no file (try with a mat
 test.todo('usage with a nested component path with extension - matching no file (try with a matching no js file)');
 test.todo('usage with a nested component path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a nested component path - matching more than one file');
+
+/*------------------*/
 
 test('usage with a deep nested component path', usageMacro, {
 	componentPath: 'with-nested-path/nested-layer/nested-component/nested-deep-component/deep-deep',
@@ -268,6 +308,8 @@ test.todo('usage with a deep nested component path with extension - matching no 
 test.todo('usage with a deep nested component path - matching no file (try with a matching extensionless file)');
 test.todo('usage with a deep nested component path - matching more than one file');
 
+/*------------------*/
+
 test('usage with an absolute component path', usageMacro, {
 	componentPath: pathFromIndex('tests/mocks/sources/components-set-c/layer-a/generator-component-a'),
 	expectedResult: [
@@ -281,7 +323,25 @@ test.todo('usage with an absolute component path - matching no file (try with a 
 test.todo('usage with an absolute component path - matching no file (try with a matching no js file)');
 test.todo('usage with an absolute component path with extension - matching no file (try with a matching no js file)');
 test.todo('usage with an absolute component path - matching no file (try with a matching extensionless file)');
-test.todo('usage with an absolute component path - matching more than one file');
+
+test('usage with an absolute component path - matching more than one file', usageMacro, {
+	componentPath: pathFromIndex('tests/mocks/sources/components-set-oo/layo/compa'),
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-oo/layo/compa.js'),
+		pathFromIndex('tests/mocks/sources/components-set-oo/layo/compa/index.js')
+	]
+});
+
+test('usage with an absolute component path should ignore the layer option', usageMacro, {
+	componentPath: pathFromIndex('tests/mocks/sources/components-set-oo/layo/compa'),
+	layer: 'absolute-path-dont-care',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-oo/layo/compa.js'),
+		pathFromIndex('tests/mocks/sources/components-set-oo/layo/compa/index.js')
+	]
+});
+
+/*------------------*/
 
 test('usage with an absolute component nested path', usageMacro, {
 	componentPath: pathFromIndex('tests/mocks/sources/with-nested-path/nested-layer/nested-component/deep'),
@@ -298,6 +358,8 @@ test.todo('usage with an absolute component nested path with extension - matchin
 test.todo('usage with an absolute component nested path - matching no file (try with a matching extensionless file)');
 test.todo('usage with an absolute component nested path - matching more than one file');
 
+/*------------------*/
+
 test('usage with an absolute component glob', usageMacro, {
 	componentPath: pathFromIndex('tests/mocks/sources/components-set-b/layer-a/*'),
 	expectedResult: [
@@ -312,24 +374,40 @@ test.todo('usage with an absolute component glob - matching no file (try with a 
 test.todo('usage with an absolute component glob with extension - matching no file (try with a matching no js file)');
 test.todo('usage with an absolute component glob - matching no file (try with a matching extensionless file)');
 test.todo('usage with an absolute component glob - matching more than one file');
-test('usage with an absolute component glob path and layer option with some traps', usageMacro, {
+test('usage with an absolute component glob path and layer option with some traps - layer option should be ignored because path is absolute', usageMacro, {
 	componentPath: pathFromIndex('tests/mocks/sources/traps/**/component-a'),
 	layer: 'layer-b',
 	sourcesDirectory: pathFromIndex('tests/mocks/sources/traps'),
 	expectedResult: [
+		pathFromIndex('tests/mocks/sources/traps/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/component-a.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a/component-a.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a/index.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/layer-b/component-a.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/test/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-c/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-c/component-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-c/component-a/index.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-c/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-c/trap/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-a/component-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-a/component-a/index.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-a/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-a/trap/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-a/trap/layer-b/component-a.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a.js'),
-		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/index.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/index.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/layer-b/component-a.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/layer-b/component-a.js'),
 		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/test/component-a.js')
-	].sort()
+	]
 });
+
+/*------------------*/
 
 test('usage with an absolute component glob nested', usageMacro, {
 	componentPath: pathFromIndex('tests/mocks/sources/with-nested-path/*/*/*'),
@@ -346,6 +424,8 @@ test.todo('usage with an absolute component glob nested with extension - matchin
 test.todo('usage with an absolute component glob nested - matching no file (try with a matching extensionless file)');
 test.todo('usage with an absolute component glob nested - matching more than one file');
 
+/*------------------*/
+
 test('usage with an absolute component glob nested deep', usageMacro, {
 	componentPath: pathFromIndex('tests/mocks/sources/with-nested-path/*/*/*/*'),
 	expectedResult: [
@@ -361,6 +441,8 @@ test.todo('usage with an absolute component glob nested with extension - matchin
 test.todo('usage with an absolute component glob nested - matching no file (try with a matching extensionless file)');
 test.todo('usage with an absolute component glob nested - matching more than one file');
 
+/*------------------*/
+
 test('usage with a relative component glob', usageMacro, {
 	componentPath: 'components-set-b/layer-a/*',
 	expectedResult: [
@@ -375,6 +457,26 @@ test.todo('usage with a relative component glob - matching no file (try with a m
 test.todo('usage with a relative component glob with extension - matching no file (try with a matching no js file)');
 test.todo('usage with a relative component glob - matching no file (try with a matching extensionless file)');
 test.todo('usage with a relative component glob - matching more than one file');
+test('usage with an relative component glob path and layer option with some traps - results', usageMacro, {
+	componentPath: '**/component-a',
+	layer: 'layer-b',
+	sourcesDirectory: pathFromIndex('tests/mocks/sources/traps'),
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a/index.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/test/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/index.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/test/component-a.js')
+	]
+});
+
+/*------------------*/
 
 test('usage with a relative component glob nested', usageMacro, {
 	componentPath: 'with-nested-path/*/*/*',
@@ -390,6 +492,8 @@ test.todo('usage with a relative component glob nested - matching no file (try w
 test.todo('usage with a relative component glob nested with extension - matching no file (try with a matching no js file)');
 test.todo('usage with a relative component glob nested - matching no file (try with a matching extensionless file)');
 test.todo('usage with a relative component glob nested - matching more than one file');
+
+/*------------------*/
 
 test('usage with a relative component glob nested deep', usageMacro, {
 	componentPath: 'with-nested-path/*/*/*/*',
