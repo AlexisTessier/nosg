@@ -17,7 +17,7 @@ const listMatchingFilepaths = require('./list-matching-filepaths.command');
  * @param {string} options.componentPath The nosg component path to use.
  * @param {string} options.sourcesDirectory The path to the sources directory of the nosg project to use.
  *
- * @returns {Promise} An promise resolving the component.
+ * @returns {Promise} A promise resolving the component.
  */
 function getComponentCommand({
 	componentPath,

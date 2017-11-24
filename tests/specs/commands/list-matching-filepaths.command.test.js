@@ -21,6 +21,8 @@ test('Type', t => {
 async function usageMacro(t, {
 	componentPath,
 	expectedResult,
+	layer,
+	componentsSet,
 	sourcesDirectory,
 	stdout = true
 }) {
@@ -34,6 +36,8 @@ async function usageMacro(t, {
 
 	const listMatchingFilepathsPromise = listMatchingFilepaths({
 		componentPath,
+		layer,
+		componentsSet,
 		sourcesDirectory,
 		stdout: stdout ? mockWritableStream(stdoutBuffer) : undefined
 	});
@@ -145,7 +149,49 @@ test.todo('usage with a set:component path - matching no file (try with a matchi
 test.todo('usage with a set:component path - matching no file (try with a matching no js file)');
 test.todo('usage with a set:component path with extension - matching no file (try with a matching no js file)');
 test.todo('usage with a set:component path - matching no file (try with a matching extensionless file)');
-test.todo('usage with a set:component path - matching more than one file');
+test('usage with a set:component path - matching more than one file', usageMacro, {
+	componentPath: 'components-set-a:component-a',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-b/component-a.js')
+	]
+});
+test('usage with a set:component path and layer option', usageMacro, {
+	componentPath: 'components-set-a:component-a',
+	layer: 'layer-a',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
+	]
+});
+
+
+test('usage with a set/*/component path', usageMacro, {
+	componentPath: 'comp-set-layer/*/comp-from-layer',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/comp-set-layer/layer-a/comp-from-layer.js')
+	]
+});
+test.todo('usage with a set/*/component path and overriding sourcesDirectory');
+test.todo('usage with a set/*/component path matching a directory with a index.js in it');
+test.todo('usage with a set/*/component path - matching no file');
+test.todo('usage with a set/*/component path - matching no file (try with a matching directory without index.js in it)');
+test.todo('usage with a set/*/component path - matching no file (try with a matching no js file)');
+test.todo('usage with a set/*/component path with extension - matching no file (try with a matching no js file)');
+test.todo('usage with a set/*/component path - matching no file (try with a matching extensionless file)');
+test('usage with a set/*/component path - matching more than one file', usageMacro, {
+	componentPath: 'components-set-a/*/component-a',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-b/component-a.js')
+	]
+});
+test('usage with a set/*/component path and layer option', usageMacro, {
+	componentPath: 'components-set-a/*/component-a',
+	layer: 'layer-b',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/components-set-a/layer-b/component-a.js')
+	]
+});
 
 test('usage with a set:component/nested path', usageMacro, {
 	componentPath: 'with-nested-path:nested-component/deep',
@@ -266,6 +312,24 @@ test.todo('usage with an absolute component glob - matching no file (try with a 
 test.todo('usage with an absolute component glob with extension - matching no file (try with a matching no js file)');
 test.todo('usage with an absolute component glob - matching no file (try with a matching extensionless file)');
 test.todo('usage with an absolute component glob - matching more than one file');
+test('usage with an absolute component glob path and layer option with some traps', usageMacro, {
+	componentPath: pathFromIndex('tests/mocks/sources/traps/**/component-a'),
+	layer: 'layer-b',
+	sourcesDirectory: pathFromIndex('tests/mocks/sources/traps'),
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/component-a/index.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-a/layer-b/test/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/index.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/component-a/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/layer-b/component-a.js'),
+		pathFromIndex('tests/mocks/sources/traps/set-b/layer-b/test/component-a.js')
+	].sort()
+});
 
 test('usage with an absolute component glob nested', usageMacro, {
 	componentPath: pathFromIndex('tests/mocks/sources/with-nested-path/*/*/*'),
