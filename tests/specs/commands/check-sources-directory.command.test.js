@@ -2,13 +2,16 @@
 
 const test = require('ava');
 
-const msg = require('@alexistessier/msg');
 const pathFromIndex = require('../../utils/path-from-index');
 const requireFromIndex = require('../../utils/require-from-index');
 
 const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
 
 const logs = requireFromIndex('sources/settings/logs');
+
+const errorsHandlingMacros = require('./check-sources-directory-errors-handling.macro');
+
+/*--------------------*/
 
 test('Type', t => {
 	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');
@@ -67,85 +70,25 @@ test('usage with a valid sources directory - default value', t => {
 
 /*----------------*/
 
-test('usage with an unexistent absolute sources directory', t => {
-	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');
-	const stdoutBuffer = [];
+test('usage with an unexistent absolute sources directory',
+	errorsHandlingMacros.unexistentAbsoluteSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/check-sources-directory.command')
+);
 
-	const unexistentAbsolutePath = pathFromIndex('tests/mocks/unexistent/sources/directory/path');
+test('usage with an unexistent relative sources directory',
+	errorsHandlingMacros.unexistentRelativeSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/check-sources-directory.command')
+);
 
-	const unexistentAbsolutePathError = t.throws(() => {
-		checkSourcesDirectory({
-			sourcesDirectory: unexistentAbsolutePath,
-			stdout: mockWritableStream(stdoutBuffer)
-		});
-	});
+test('usage with a not directory absolute sources directory',
+	errorsHandlingMacros.notDirectoryAbsoluteSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/check-sources-directory.command')
+);
 
-	t.is(unexistentAbsolutePathError.message, logs.unexistentSourcesDirectory({sourcesDirectory: unexistentAbsolutePath}));
-
-	t.is(stdoutBuffer.join(''), '');
-});
-
-test('usage with an unexistent relative sources directory', t => {
-	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');
-	const stdoutBuffer = [];
-
-	const unexistentRelativePath = 'tests/mocks/unexistent/sources/directory/path'
-
-	const unexistentRelativePathError = t.throws(() => {
-		checkSourcesDirectory({
-			sourcesDirectory: unexistentRelativePath,
-			stdout: mockWritableStream(stdoutBuffer)
-		});
-	});
-
-	t.is(unexistentRelativePathError.message, msg(
-		logs.unexistentSourcesDirectory({
-			sourcesDirectory: pathFromIndex(unexistentRelativePath)
-		}), logs.ensureCurrentWorkingDirectory()
-	));
-
-	t.is(stdoutBuffer.join(''), '');
-});
-
-test('usage with a not directory absolute sources directory', t => {
-	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');
-	const stdoutBuffer = [];
-
-	const unvalidAbsolutePath = pathFromIndex('tests/mocks/not-a-directory');
-
-	const unvalidAbsolutePathError = t.throws(() => {
-		checkSourcesDirectory({
-			sourcesDirectory: unvalidAbsolutePath,
-			stdout: mockWritableStream(stdoutBuffer)
-		});
-	});
-
-	t.is(unvalidAbsolutePathError.message, logs.unvalidSourcesDirectory({sourcesDirectory: unvalidAbsolutePath}));
-
-	t.is(stdoutBuffer.join(''), '');
-});
-
-test('usage with a not directory relative sources directory', t => {
-	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');
-	const stdoutBuffer = [];
-
-	const unvalidRelativePath = 'tests/mocks/not-a-directory';
-
-	const unvalidRelativePathError = t.throws(() => {
-		checkSourcesDirectory({
-			sourcesDirectory: unvalidRelativePath,
-			stdout: mockWritableStream(stdoutBuffer)
-		});
-	});
-
-	t.is(unvalidRelativePathError.message, msg(
-		logs.unvalidSourcesDirectory({
-			sourcesDirectory: pathFromIndex(unvalidRelativePath)
-		}), logs.ensureCurrentWorkingDirectory()
-	));
-
-	t.is(stdoutBuffer.join(''), '');
-});
+test('usage with a not directory relative sources directory',
+	errorsHandlingMacros.notDirectoryRelativeSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/check-sources-directory.command')
+);
 
 test('should work without stdout option', t => {
 	const checkSourcesDirectory = requireFromIndex('sources/commands/check-sources-directory.command');

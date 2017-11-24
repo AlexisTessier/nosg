@@ -9,6 +9,8 @@ const requireFromIndex = require('../../utils/require-from-index');
 
 const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
 
+const checkSourcesDirectoryErrorsHandlingMacros = require('./check-sources-directory-errors-handling.macro');
+
 test('Type', t => {
 	const listMatchingFilepaths = requireFromIndex('sources/commands/list-matching-filepaths.command');
 
@@ -145,7 +147,12 @@ test('usage with a layer/component path and overriding sourcesDirectory', usageM
 		pathFromIndex('tests/mocks/custom-src-dir/comp-set-layer/layer-a/comp-from-layer.js')
 	]
 });
-test.todo('usage with a layer/component path matching a directory with a index.js in it');
+test('usage with a layer/component path matching a directory with a index.js in it', usageMacro, {
+	componentPath: 'cslayer/compindex',
+	expectedResult: [
+		pathFromIndex('tests/mocks/sources/olga/cslayer/compindex/index.js')
+	]
+});
 test.todo('usage with a layer/component path - matching no file');
 test.todo('usage with a layer/component path - matching no file (try with a matching directory without index.js in it)');
 test.todo('usage with a layer/component path - matching no file (try with a matching no js file)');
@@ -512,87 +519,25 @@ test.todo('usage with a relative component glob nested deep - matching more than
 
 /*--------------------------*/
 
-test.skip('Trying to use an unexistent absolute sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+test('Trying to use an unexistent absolute sourcesDirectory must throw error',
+	checkSourcesDirectoryErrorsHandlingMacros.unexistentAbsoluteSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/list-matching-filepaths.command')
+);
 
-	const unexistentAbsolutePath = pathFromIndex('tests/mocks/unexistent/sources/directory/path');
+test('Trying to use an unexistent relative sourcesDirectory must throw error',
+	checkSourcesDirectoryErrorsHandlingMacros.unexistentRelativeSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/list-matching-filepaths.command')
+);
 
-	const unexistentAbsolutePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: unexistentAbsolutePath,
-			generator(){
-				t.fail();
-			},
-			stdout: mockWritableStream(),
-			cli: { name: 'nosg-test' }
-		});
-	});
+test('Trying to use an absolute path to a non directory sourcesDirectory must throw error',
+	checkSourcesDirectoryErrorsHandlingMacros.notDirectoryAbsoluteSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/list-matching-filepaths.command')
+);
 
-	//t.is(unexistentAbsolutePathError.message, logs.unexistentSourcesDirectory({sourcesDirectory: unexistentAbsolutePath}));
-});
-
-test.skip('Trying to use an unexistent relative sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-
-	const unexistentRelativePath = 'tests/mocks/unexistent/sources/directory/path';
-
-	const unexistentRelativePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: unexistentRelativePath,
-			generator(){
-				t.fail();
-			},
-			stdout: mockWritableStream(),
-			cli: { name: 'nosg-test' }
-		});
-	});
-
-	// t.is(unexistentRelativePathError.message, msg(
-	// 	logs.unexistentSourcesDirectory({sourcesDirectory: pathFromIndex(unexistentRelativePath)}),
-	// 	logs.ensureCurrentWorkingDirectory()
-	// ));
-});
-
-test.skip('Trying to use an absolute path to a non directory sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-
-	const notDirectoryAbsolutePath = pathFromIndex('tests/mocks/not-a-directory');
-
-	const notDirectoryAbsolutePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: notDirectoryAbsolutePath,
-			generator(){
-				t.fail();
-			},
-			stdout: mockWritableStream(),
-			cli: { name: 'nosg-test' }
-		});
-	});
-
-	//t.is(notDirectoryAbsolutePathError.message, logs.unvalidSourcesDirectory({sourcesDirectory: notDirectoryAbsolutePath}));
-});
-
-test.skip('Trying to use a relative path to a non directory sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-
-	const notDirectoryRelativePath = 'tests/mocks/not-a-directory'
-
-	const notDirectoryRelativePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: notDirectoryRelativePath,
-			generator(){
-				t.fail();
-			},
-			stdout: mockWritableStream(),
-			cli: { name: 'nosg-test' }
-		});
-	});
-
-	// t.is(notDirectoryRelativePathError.message, msg(
-	// 	logs.unvalidSourcesDirectory({sourcesDirectory: pathFromIndex(notDirectoryRelativePath)}),
-	// 	logs.ensureCurrentWorkingDirectory()
-	// ));
-});
+test('Trying to use a relative path to a non directory sourcesDirectory must throw error',
+	checkSourcesDirectoryErrorsHandlingMacros.notDirectoryRelativeSourcesDirectoryMacro,
+	requireFromIndex('sources/commands/list-matching-filepaths.command')
+);
 
 /*--------------------------*/
 

@@ -7,6 +7,9 @@ const loggableGenerator = generator => typeof generator === 'function' ? generat
 
 module.exports = {
 	// Errors
+	componentNotFound: ({componentPath}) => msg(
+		`No component found matching "${componentPath}".`
+	),
 	unvalidGenerator: ({generator}) => msg(
 		`${generator} (${typeof generator}) is not a valid generator value.`,
 		`Generator can be a function, a component path to`,

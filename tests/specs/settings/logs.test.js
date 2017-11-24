@@ -12,6 +12,7 @@ test('Type and content', t => {
 	t.is(typeof logs, 'object');
 
 	t.deepEqual(Object.keys(logs).sort(), [
+		'componentNotFound',
 		'unvalidGenerator',
 		'unvalidSourcesDirectory',
 		'unexistentSourcesDirectory',
@@ -22,6 +23,19 @@ test('Type and content', t => {
 		'hasRunnedGenerator',
 		'validSourcesDirectory'
 	].sort());
+});
+
+test('componentNotFound', t => {
+	const logs = requireFromIndex('sources/settings/logs');
+
+	t.is(typeof logs.componentNotFound, 'function');
+	t.is(logs.componentNotFound({ componentPath: 'hello' }), msg(
+		`No component found matching "hello".`
+	));
+
+	t.is(logs.componentNotFound({ componentPath: 'rock-and-billy' }), msg(
+		`No component found matching "rock-and-billy".`
+	));
 });
 
 test('unvalidGenerator', t => {
