@@ -50,6 +50,10 @@ module.exports = {
 		`${cli.name} ${command} correctly runned the generator "${loggableGenerator(generator)}"`,
 		`with the options ${loggableOptions(options)}.`
 	),
+	generatedFilesList: ({filesList = []}) => [
+		`The following files were generated:`,
+		filesList.map(f => `\n\t- ${f}`).join('')
+	].join(''),
 	// Success
 	validSourcesDirectory: ({sourcesDirectory}) => (
 		`The sources directory at path "${sourcesDirectory}" is valid.`

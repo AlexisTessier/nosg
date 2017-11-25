@@ -11,16 +11,16 @@ const logs = requireFromIndex('sources/settings/logs');
 
 /*--------------------*/
 
-function unexistentAbsoluteSourcesDirectoryMacro(t, command){
+function unexistentAbsoluteSourcesDirectoryMacro(t, command, options = {}){
 	const stdoutBuffer = [];
 
 	const unexistentAbsolutePath = pathFromIndex('tests/mocks/unexistent/sources/directory/path');
 
 	const unexistentAbsolutePathError = t.throws(() => {
-		command({
+		command(Object.assign({
 			sourcesDirectory: unexistentAbsolutePath,
 			stdout: mockWritableStream(stdoutBuffer)
-		});
+		}, options));
 	});
 
 	t.is(unexistentAbsolutePathError.message, logs.unexistentSourcesDirectory({sourcesDirectory: unexistentAbsolutePath}));
@@ -28,16 +28,16 @@ function unexistentAbsoluteSourcesDirectoryMacro(t, command){
 	t.is(stdoutBuffer.join(''), '');
 }
 
-function unexistentRelativeSourcesDirectoryMacro(t, command){
+function unexistentRelativeSourcesDirectoryMacro(t, command, options = {}){
 	const stdoutBuffer = [];
 
 	const unexistentRelativePath = 'tests/mocks/unexistent/sources/directory/path'
 
 	const unexistentRelativePathError = t.throws(() => {
-		command({
+		command(Object.assign({
 			sourcesDirectory: unexistentRelativePath,
 			stdout: mockWritableStream(stdoutBuffer)
-		});
+		}, options));
 	});
 
 	t.is(unexistentRelativePathError.message, msg(
@@ -49,16 +49,16 @@ function unexistentRelativeSourcesDirectoryMacro(t, command){
 	t.is(stdoutBuffer.join(''), '');
 }
 
-function notDirectoryAbsoluteSourcesDirectoryMacro(t, command){
+function notDirectoryAbsoluteSourcesDirectoryMacro(t, command, options = {}){
 	const stdoutBuffer = [];
 
 	const unvalidAbsolutePath = pathFromIndex('tests/mocks/not-a-directory');
 
 	const unvalidAbsolutePathError = t.throws(() => {
-		command({
+		command(Object.assign({
 			sourcesDirectory: unvalidAbsolutePath,
 			stdout: mockWritableStream(stdoutBuffer)
-		});
+		}, options));
 	});
 
 	t.is(unvalidAbsolutePathError.message, logs.unvalidSourcesDirectory({sourcesDirectory: unvalidAbsolutePath}));
@@ -66,16 +66,16 @@ function notDirectoryAbsoluteSourcesDirectoryMacro(t, command){
 	t.is(stdoutBuffer.join(''), '');
 }
 
-function notDirectoryRelativeSourcesDirectoryMacro(t, command){
+function notDirectoryRelativeSourcesDirectoryMacro(t, command, options = {}){
 	const stdoutBuffer = [];
 
 	const unvalidRelativePath = 'tests/mocks/not-a-directory';
 
 	const unvalidRelativePathError = t.throws(() => {
-		command({
+		command(Object.assign({
 			sourcesDirectory: unvalidRelativePath,
 			stdout: mockWritableStream(stdoutBuffer)
-		});
+		}, options));
 	});
 
 	t.is(unvalidRelativePathError.message, msg(

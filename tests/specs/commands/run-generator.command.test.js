@@ -12,6 +12,8 @@ const nl = '\n';
 const pathFromIndex = require('../../utils/path-from-index');
 const requireFromIndex = require('../../utils/require-from-index');
 
+const checkSourcesDirectoryErrorsHandlingMacros = require('./check-sources-directory-errors-handling.macro');
+
 const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
 const mockFunction = requireFromIndex('tests/mocks/mock-function');
 
@@ -535,86 +537,54 @@ test.cb('sourcesDirectory relative path value can be overrided using the options
 	t.true(runGeneratorPromise instanceof Promise);
 });
 
+/*--------------------*/
+
 test('Trying to use an unexistent absolute sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-
-	const unexistentAbsolutePath = pathFromIndex('tests/mocks/unexistent/sources/directory/path');
-
-	const unexistentAbsolutePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: unexistentAbsolutePath,
+	checkSourcesDirectoryErrorsHandlingMacros.unexistentAbsoluteSourcesDirectoryMacro(t,
+		requireFromIndex('sources/commands/run-generator.command'),
+		{
 			generator(){
 				t.fail();
 			},
-			stdout: mockWritableStream(),
 			cli: { name: 'nosg-test' }
-		});
-	});
-
-	t.is(unexistentAbsolutePathError.message, logs.unexistentSourcesDirectory({sourcesDirectory: unexistentAbsolutePath}));
+		}
+	)
 });
 
 test('Trying to use an unexistent relative sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-
-	const unexistentRelativePath = 'tests/mocks/unexistent/sources/directory/path';
-
-	const unexistentRelativePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: unexistentRelativePath,
+	checkSourcesDirectoryErrorsHandlingMacros.unexistentRelativeSourcesDirectoryMacro(t,
+		requireFromIndex('sources/commands/run-generator.command'),
+		{
 			generator(){
 				t.fail();
 			},
-			stdout: mockWritableStream(),
 			cli: { name: 'nosg-test' }
-		});
-	});
-
-	t.is(unexistentRelativePathError.message, msg(
-		logs.unexistentSourcesDirectory({sourcesDirectory: pathFromIndex(unexistentRelativePath)}),
-		logs.ensureCurrentWorkingDirectory()
-	));
+		}
+	);
 });
 
 test('Trying to use an absolute path to a non directory sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-
-	const notDirectoryAbsolutePath = pathFromIndex('tests/mocks/not-a-directory');
-
-	const notDirectoryAbsolutePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: notDirectoryAbsolutePath,
+	checkSourcesDirectoryErrorsHandlingMacros.notDirectoryAbsoluteSourcesDirectoryMacro(t,
+		requireFromIndex('sources/commands/run-generator.command'),
+		{
 			generator(){
 				t.fail();
 			},
-			stdout: mockWritableStream(),
 			cli: { name: 'nosg-test' }
-		});
-	});
-
-	t.is(notDirectoryAbsolutePathError.message, logs.unvalidSourcesDirectory({sourcesDirectory: notDirectoryAbsolutePath}));
+		}
+	);
 });
 
 test('Trying to use a relative path to a non directory sourcesDirectory must throw error', t => {
-	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
-
-	const notDirectoryRelativePath = 'tests/mocks/not-a-directory'
-
-	const notDirectoryRelativePathError = t.throws(() => {
-		runGenerator({
-			sourcesDirectory: notDirectoryRelativePath,
+	checkSourcesDirectoryErrorsHandlingMacros.notDirectoryRelativeSourcesDirectoryMacro(t,
+		requireFromIndex('sources/commands/run-generator.command'),
+		{
 			generator(){
 				t.fail();
 			},
-			stdout: mockWritableStream(),
 			cli: { name: 'nosg-test' }
-		});
-	});
-
-	t.is(notDirectoryRelativePathError.message, msg(
-		logs.unvalidSourcesDirectory({sourcesDirectory: pathFromIndex(notDirectoryRelativePath)}),
-		logs.ensureCurrentWorkingDirectory()
-	));
+		}
+	);
 });
 
 /*------------------*/
@@ -926,7 +896,60 @@ test.todo('runGenerator with an absolute Javascript Value Locator (object) as ge
 
 /*---------------*/
 
-test.todo('display the created files when finished');
+test.cb('display the created files when finished', t => {
+	const runGenerator = requireFromIndex('sources/commands/run-generator.command');
+	const pathTemp1 = pathFromIndex('tmp/tests/display-created-files/one.txt');
+	const pathTemp2 = pathFromIndex('tmp/tests/display-created-files/two.js');
+
+	const stdoutBuffer = [];
+	let generateCalled = false;
+
+	const runGeneratorPromise = runGenerator({
+		generator(generate){
+			generateCalled = true;
+			generate({
+				[pathTemp1]: 'content text test',
+				[pathTemp2]: `'use strict'; module.exports = 7`
+			})
+		},
+		stdout: mockWritableStream(stdoutBuffer),
+		cli: { name: 'nosg-test-display' }
+	});
+
+	t.true(runGeneratorPromise instanceof Promise);
+
+	runGeneratorPromise.then((filesList) => {
+		t.true(filesList instanceof Array);
+		t.true(generateCalled);
+
+		t.deepEqual(filesList, [
+			pathTemp1,
+			pathTemp2
+		]);
+
+		const logMessage = logs.willRunGenerator({
+			cli: {name: 'nosg-test-display'},
+			command: 'run-generator',
+			generator: 'generator',
+			options: {}
+		});
+
+		const successMessage = logs.hasRunnedGenerator({
+			cli: {name: 'nosg-test-display'},
+			command: 'run-generator',
+			generator: 'generator',
+			options: {}
+		});
+
+		const generatedFilesMessage = logs.generatedFilesList({filesList: [
+			pathTemp1, pathTemp2
+		].sort()});
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\nLOG: ${generatedFilesMessage}\n`);
+
+		t.end();
+	})
+});
 
 test.todo('error if generate emit an error event');
 

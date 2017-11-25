@@ -12,7 +12,8 @@ const {
 	generateNotCalledTimeout: GEN_NOT_CAL_TMO,
 	generateFinishEventNotEmittedTimeout: GEN_FIN_EVT_TMO,
 	willRunGenerator: WIL_RUN_GEN,
-	hasRunnedGenerator: HAS_RUN_GEN
+	hasRunnedGenerator: HAS_RUN_GEN,
+	generatedFilesList: GEN_FIL_LIS
 } = require('../settings/logs');
 
 const log = require('../tools/log');
@@ -86,7 +87,13 @@ function runGeneratorCommand({
 				cli, command, generator, options
 			}));
 
-			resolve();
+			const filesList = event.success.sort();
+
+			log(stdout, GEN_FIL_LIS({
+				filesList
+			}));
+
+			resolve(filesList);
 		};
 		generate.on('finish', resolver);
 	});
