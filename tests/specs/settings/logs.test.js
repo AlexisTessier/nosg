@@ -12,7 +12,11 @@ test('Type and content', t => {
 	t.is(typeof logs, 'object');
 
 	t.deepEqual(Object.keys(logs).sort(), [
+		'listMatchingFilepaths',
+		'componentFound',
 		'componentNotFound',
+		'noFilepathMatching',
+		'manyFilepathsMatching',
 		'unvalidGenerator',
 		'unvalidSourcesDirectory',
 		'unexistentSourcesDirectory',
@@ -21,8 +25,26 @@ test('Type and content', t => {
 		'generateFinishEventNotEmittedTimeout',
 		'willRunGenerator',
 		'hasRunnedGenerator',
-		'validSourcesDirectory'
+		'validSourcesDirectory',
+		'generatedFilesList'
 	].sort());
+});
+
+test('componentFound', t => {
+	const logs = requireFromIndex('sources/settings/logs');
+
+	t.is(typeof logs.componentFound, 'function');
+	t.is(logs.componentFound({ componentPath: 'hello' }), msg(
+		`Component "hello" found at path "undefined"`
+	));
+
+	t.is(logs.componentFound({ componentPath: 'rock-and-billy', fullComponentPath: 'hello-2' }), msg(
+		`Component "rock-and-billy" found at path "hello-2"`
+	));
+
+	t.is(logs.componentFound({ componentPath: 'doe', fullComponentPath: 'full-filepath' }), msg(
+		`Component "doe" found at path "full-filepath"`
+	));
 });
 
 test('componentNotFound', t => {
@@ -30,12 +52,70 @@ test('componentNotFound', t => {
 
 	t.is(typeof logs.componentNotFound, 'function');
 	t.is(logs.componentNotFound({ componentPath: 'hello' }), msg(
-		`No component found matching "hello".`
+		`Component "hello" not found.`
 	));
 
 	t.is(logs.componentNotFound({ componentPath: 'rock-and-billy' }), msg(
-		`No component found matching "rock-and-billy".`
+		`Component "rock-and-billy" not found.`
 	));
+});
+
+test('noFilepathMatching', t => {
+	const logs = requireFromIndex('sources/settings/logs');
+
+	t.is(typeof logs.noFilepathMatching, 'function');
+	t.is(logs.noFilepathMatching({ componentPath: 'hello' }), msg(
+		`No filepath match the component path "hello".`
+	));
+
+	t.is(logs.noFilepathMatching({ componentPath: 'world.js' }), msg(
+		`No filepath match the component path "world.js".`
+	));
+});
+
+test('manyFilepathsMatching', t => {
+	const logs = requireFromIndex('sources/settings/logs');
+
+	t.is(typeof logs.manyFilepathsMatching, 'function');
+	t.is(logs.manyFilepathsMatching({ componentPath: 'hello world' }), msg(
+		`More than one filepath match the component path "hello world".`,
+		`Try to use a more accurate component path.`
+	));
+
+	t.is(logs.manyFilepathsMatching({ componentPath: 'test.txt' }), msg(
+		`More than one filepath match the component path "test.txt".`,
+		`Try to use a more accurate component path.`
+	));
+});
+
+test('listMatchingFilepaths', t => {
+	const logs = requireFromIndex('sources/settings/logs');
+
+	t.is(typeof logs.listMatchingFilepaths, 'function');
+	t.is(logs.listMatchingFilepaths({
+		componentPath: 'hello world',
+		filepaths: ['puma warrior', 'superman vs batman']
+	}), `The filepaths matching "hello world" are:\n\t- puma warrior\n\t- superman vs batman`);
+
+	t.is(logs.listMatchingFilepaths({
+		componentPath: 'hello',
+		filepaths: ['rocket warrior', 'banana.banana.js', 'test']
+	}), `The filepaths matching "hello" are:\n\t- rocket warrior\n\t- banana.banana.js\n\t- test`);
+
+	t.is(logs.listMatchingFilepaths({
+		componentPath: 'test-hello-again',
+		filepaths: ['rocket warrior']
+	}), `One filepath matchs "test-hello-again":\n\t- rocket warrior`);
+
+	t.is(logs.listMatchingFilepaths({
+		componentPath: 'test-hello-again-2',
+		filepaths: ['rocket warrior']
+	}), `One filepath matchs "test-hello-again-2":\n\t- rocket warrior`);
+
+	t.is(logs.listMatchingFilepaths({
+		componentPath: 'no/match/test',
+		filepaths: []
+	}), logs.noFilepathMatching({componentPath: 'no/match/test'}));
 });
 
 test('unvalidGenerator', t => {
@@ -196,4 +276,33 @@ test('validSourcesDirectory', t => {
 	t.is(logs.validSourcesDirectory({
 		sourcesDirectory: 42
 	}), `The sources directory at path "42" is valid.`);
+});
+
+test('generatedFilesList', t => {
+	const logs = requireFromIndex('sources/settings/logs');
+
+	t.is(typeof logs.generatedFilesList, 'function');
+	t.is(logs.generatedFilesList({ filesList: ['hello.js', 'test'] }),
+		`The following files were generated:\n\t- hello.js\n\t- test`
+	);
+
+	t.is(logs.generatedFilesList({ filesList: ['hellobis.js', 'moretest', 'third.txt'] }),
+		`The following files were generated:\n\t- hellobis.js\n\t- moretest\n\t- third.txt`
+	);
+
+	t.is(logs.generatedFilesList({ filesList: ['hellobis.js'] }),
+		`The following file was generated:\n\t- hellobis.js`
+	);
+
+	t.is(logs.generatedFilesList({ filesList: [] }),
+		`No file generated.`
+	);
+
+	t.is(logs.generatedFilesList({}),
+		`No file generated.`
+	);
+
+	t.is(logs.generatedFilesList(),
+		`No file generated.`
+	);
 });

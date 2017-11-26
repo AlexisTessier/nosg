@@ -5,10 +5,19 @@ const msg = require('@alexistessier/msg');
 const loggableOptions = options => JSON.stringify(options);
 const loggableGenerator = generator => typeof generator === 'function' ? generator.name : generator;
 
-module.exports = {
-	// Errors
-	componentNotFound: ({componentPath}) => msg(
-		`No component found matching "${componentPath}".`
+const logs = {
+	componentFound: ({componentPath, fullComponentPath}) => (
+		`Component "${componentPath}" found at path "${fullComponentPath}"`
+	),
+	componentNotFound: ({componentPath}) => (
+		`Component "${componentPath}" not found.`
+	),
+	noFilepathMatching: ({componentPath}) => (
+		`No filepath match the component path "${componentPath}".`
+	),
+	manyFilepathsMatching: ({componentPath}) => msg(
+		`More than one filepath match the component path "${componentPath}".`,
+		`Try to use a more accurate component path.`
 	),
 	unvalidGenerator: ({generator}) => msg(
 		`${generator} (${typeof generator}) is not a valid generator value.`,
@@ -41,7 +50,6 @@ module.exports = {
 		`${cli.name} ${command}, or check that the generator works correctly and actually`,
 		`calls the generate function.`
 	),
-	// Notices
 	willRunGenerator: ({ cli = {}, command, generator, options }) => msg(
 		`${cli.name} ${command} will run the generator "${loggableGenerator(generator)}"`,
 		`with the options ${loggableOptions(options)}.`
@@ -50,12 +58,23 @@ module.exports = {
 		`${cli.name} ${command} correctly runned the generator "${loggableGenerator(generator)}"`,
 		`with the options ${loggableOptions(options)}.`
 	),
-	generatedFilesList: ({filesList = []}) => [
-		`The following files were generated:`,
-		filesList.map(f => `\n\t- ${f}`).join('')
-	].join(''),
-	// Success
+	generatedFilesList: ({filesList = []} = {}) => (
+		filesList.length === 0 ? `No file generated.` : [
+			`The following file${filesList.length > 1 ? 's were' : ' was'} generated:`,
+			filesList.map(f => `\n\t- ${f}`).join('')
+		].join('')
+	),
+	listMatchingFilepaths: ({componentPath, filepaths}) => (
+		filepaths.length === 0 ? logs.noFilepathMatching({componentPath}) : [
+			filepaths.length > 1
+				? `The filepaths matching "${componentPath}" are:`
+				: `One filepath matchs "${componentPath}":`,
+			...filepaths.map(filepath => `\t- ${filepath}`)
+		].join('\n')
+	),
 	validSourcesDirectory: ({sourcesDirectory}) => (
 		`The sources directory at path "${sourcesDirectory}" is valid.`
 	)
 };
+
+module.exports = logs;

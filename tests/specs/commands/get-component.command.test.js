@@ -28,6 +28,7 @@ test('Type', t => {
 
 async function usageMacro(t, {
 	componentPath,
+	layer,
 	expectedResultPath,
 	sourcesDirectory,
 	expectedResultType = 'function',
@@ -46,6 +47,7 @@ async function usageMacro(t, {
 
 	const getComponentPromise = getComponent({
 		componentPath,
+		layer,
 		sourcesDirectory,
 		stdout: stdout ? mockWritableStream(stdoutBuffer) : undefined
 	});
@@ -63,6 +65,7 @@ async function usageMacro(t, {
 
 async function usageErrorMacro(t, {
 	componentPath,
+	layer,
 	errorMessage,
 	sourcesDirectory,
 	stdout = true
@@ -79,6 +82,7 @@ async function usageErrorMacro(t, {
 
 	const getComponentPromise = getComponent({
 		componentPath,
+		layer,
 		sourcesDirectory,
 		stdout: stdout ? mockWritableStream(stdoutBuffer) : undefined
 	});
@@ -103,6 +107,11 @@ test('usage with a complete component path', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a',
 	expectedResultPath: pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
 });
+test('usage with a complete component path and layer option', usageMacro, {
+	componentPath: 'components-set-a/layer-a/component-a',
+	layer: 'layer-a',
+	expectedResultPath: pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
+});
 test('usage with a complete component path with .js extension', usageMacro, {
 	componentPath: 'components-set-a/layer-a/component-a.js',
 	expectedResultPath: pathFromIndex('tests/mocks/sources/components-set-a/layer-a/component-a.js')
@@ -124,6 +133,7 @@ test('usage with a complete component path - matching no file', usageErrorMacro,
 	componentPath: 'components-set-a/layer-w/component-x',
 	errorMessage: msg(
 		logs.componentNotFound({componentPath: 'components-set-a/layer-w/component-x'}),
+		logs.noFilepathMatching({componentPath: 'components-set-a/layer-w/component-x'}),
 		logs.ensureCurrentWorkingDirectory()
 	)
 });
@@ -131,6 +141,7 @@ test('usage with a complete component path - matching no file (try with a matchi
 	componentPath: 'components-set-d/layer-a/component-f-dir',
 	errorMessage: msg(
 		logs.componentNotFound({componentPath: 'components-set-d/layer-a/component-f-dir'}),
+		logs.noFilepathMatching({componentPath: 'components-set-d/layer-a/component-f-dir'}),
 		logs.ensureCurrentWorkingDirectory()
 	)
 });
@@ -138,6 +149,7 @@ test('usage with a complete component path - matching no file (try with a matchi
 	componentPath: 'components-set-a/layer-a/component-no-js',
 	errorMessage: msg(
 		logs.componentNotFound({componentPath: 'components-set-a/layer-a/component-no-js'}),
+		logs.noFilepathMatching({componentPath: 'components-set-a/layer-a/component-no-js'}),
 		logs.ensureCurrentWorkingDirectory()
 	)
 });
@@ -145,6 +157,7 @@ test('usage with a complete component path with extension - matching no file (tr
 	componentPath: 'components-set-a/layer-a/component-no-js.txt',
 	errorMessage: msg(
 		logs.componentNotFound({componentPath: 'components-set-a/layer-a/component-no-js.txt'}),
+		logs.noFilepathMatching({componentPath: 'components-set-a/layer-a/component-no-js.txt'}),
 		logs.ensureCurrentWorkingDirectory()
 	)
 });
@@ -152,30 +165,48 @@ test('usage with a complete component path - matching no file (try with a matchi
 	componentPath: 'components-set-a/layer-a/component-no-ext',
 	errorMessage: msg(
 		logs.componentNotFound({componentPath: 'components-set-a/layer-a/component-no-ext'}),
+		logs.noFilepathMatching({componentPath: 'components-set-a/layer-a/component-no-ext'}),
 		logs.ensureCurrentWorkingDirectory()
 	)
 });
-test.skip('usage with a complete component path - matching more than one file', usageErrorMacro, {
+test('usage with a complete component path - matching more than one file', usageErrorMacro, {
 	componentPath: 'components-set-d/layer-double/component-double',
-	expectedResult: [
-		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double.js'),
-		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double/index.js')
-	]
+	errorMessage: msg(
+		logs.componentNotFound({componentPath: 'components-set-d/layer-double/component-double'}),
+		logs.manyFilepathsMatching({componentPath: 'components-set-d/layer-double/component-double'}),
+		logs.listMatchingFilepaths({
+			componentPath: 'components-set-d/layer-double/component-double',
+			filepaths: [
+				pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double.js'),
+				pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double/index.js')
+			]
+		})
+	)
 });
-test.skip('usage with a complete component path and layer option - results', usageMacro, {
+test('usage with a complete component path and layer option - too many results', usageErrorMacro, {
 	componentPath: 'components-set-d/layer-double/component-double',
 	layer: 'layer-double',
-	expectedResult: [
-		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double.js'),
-		pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double/index.js')
-	]
+	errorMessage: msg(
+		logs.componentNotFound({componentPath: 'components-set-d/layer-double/component-double'}),
+		logs.manyFilepathsMatching({componentPath: 'components-set-d/layer-double/component-double'}),
+		logs.listMatchingFilepaths({
+			componentPath: 'components-set-d/layer-double/component-double',
+			filepaths: [
+				pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double.js'),
+				pathFromIndex('tests/mocks/sources/components-set-d/layer-double/component-double/index.js')
+			]
+		})
+	)
 });
-test.skip('usage with a complete component path and layer option - no results', usageErrorMacro, {
+test('usage with a complete component path and layer option - no results', usageErrorMacro, {
 	componentPath: 'components-set-d/layer-double/component-double',
 	layer: 'layer-a',
-	expectedResult: []
+	errorMessage: msg(
+		logs.componentNotFound({componentPath: 'components-set-d/layer-double/component-double'}),
+		logs.noFilepathMatching({componentPath: 'components-set-d/layer-double/component-double'}),
+		logs.ensureCurrentWorkingDirectory()
+	)
 });
-
 
 /*------------------*/
 

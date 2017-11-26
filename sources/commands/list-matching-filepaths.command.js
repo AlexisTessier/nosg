@@ -6,6 +6,10 @@ const glob = require('glob');
 
 const defaultOptions = require('../settings/default-options');
 
+const {
+	listMatchingFilepaths: LS_MAT_FIL
+} = require('../settings/logs');
+
 const log = require('../tools/log');
 
 const checkSourcesDirectory = require('./check-sources-directory.command');
@@ -86,10 +90,10 @@ function listMatchingFilepathsCommand({
 			return true;
 		}).sort();
 
-		log(stdout, [
-			`List of filepaths matching "${componentPath}":`,
-			...filepaths.map(filepath => `\t- "${filepath}"`)
-		].join('\n'));
+		log(stdout, LS_MAT_FIL({
+			componentPath,
+			filepaths
+		}));
 
 		return filepaths;
 	});

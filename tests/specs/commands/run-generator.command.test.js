@@ -143,7 +143,9 @@ test.cb('function as generator - generate synchronous call', t => {
 			options: {}
 		});
 
-		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\n`);
+		const generatedFilesMessage = logs.generatedFilesList();
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\nLOG: ${generatedFilesMessage}\n`);
 
 		t.end();
 	});
@@ -187,7 +189,9 @@ test.cb('function as generator - generate asynchronous call', t => {
 			options: {}
 		});
 
-		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\n`);
+		const generatedFilesMessage = logs.generatedFilesList();
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\nLOG: ${generatedFilesMessage}\n`);
 
 		t.end();
 	});
@@ -808,7 +812,9 @@ function runGeneratorWithAStringAsGeneratorMacro(t, {
 			options: options || {}
 		});
 
-		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\n`);
+		const generatedFilesMessage = logs.generatedFilesList();
+
+		t.is(stdoutBuffer.join(''), `LOG: ${logMessage}\nSUCCESS: ${successMessage}\nLOG: ${generatedFilesMessage}\n`);
 
 		t.end();
 	});

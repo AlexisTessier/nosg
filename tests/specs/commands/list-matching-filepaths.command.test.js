@@ -11,6 +11,8 @@ const mockWritableStream = requireFromIndex('tests/mocks/mock-writable-stream');
 
 const checkSourcesDirectoryErrorsHandlingMacros = require('./check-sources-directory-errors-handling.macro');
 
+const logs = requireFromIndex('sources/settings/logs');
+
 test('Type', t => {
 	const listMatchingFilepaths = requireFromIndex('sources/commands/list-matching-filepaths.command');
 
@@ -51,11 +53,12 @@ async function usageMacro(t, {
 	t.true(listMatchingFilepathsResult instanceof Array);
 	t.deepEqual(listMatchingFilepathsResult, expectedResult.sort());
 
-	t.is(stdoutBuffer.join(''), !stdout ? '' : [
-		`LOG: List of filepaths matching "${componentPath}":`,
-		...expectedResult.sort().map(res => `\t- "${res}"`),
-		''
-	].join('\n'));
+	const logMessage = logs.listMatchingFilepaths({
+		componentPath,
+		filepaths: expectedResult.sort()
+	});
+
+	t.is(stdoutBuffer.join(''), !stdout ? '' : `LOG: ${logMessage}\n`);
 }
 
 /*------------------*/

@@ -24,7 +24,7 @@ const log = require('../tools/log');
  * @description Run a NOSG generator. A NOSG generator is a function which generate files using a generate function.
  *
  * @param {object} options An object containing the command options.
- * @param {function | string} options.generator The generator to use. It can be a function, the name of one nosg generator in the generators layers, or a Javascript Value Locator to a function.
+ * @param {function | string} options.generator The generator to use. It can be a function or a component path to a function.
  * @param {object} options.options The options passed to the generator function.
  * @param {string} options.sourcesDirectory The path to the sources directory of the nosg project to use.
  * @param {number} options.timeout The command timeout. If the command is not terminated after this duration, an error will be thrown.
