@@ -6,6 +6,8 @@ const msg = require('@alexistessier/msg');
 
 const requireFromIndex = require('../../utils/require-from-index');
 
+test.todo('Add type assertions to check parameters');
+
 test('Type and content', t => {
 	const logs = requireFromIndex('sources/settings/logs');
 
@@ -30,7 +32,7 @@ test('Type and content', t => {
 	].sort());
 });
 
-test('componentFound', t => {
+test.skip('componentFound', t => {
 	const logs = requireFromIndex('sources/settings/logs');
 
 	t.is(typeof logs.componentFound, 'function');
@@ -44,6 +46,22 @@ test('componentFound', t => {
 
 	t.is(logs.componentFound({ componentPath: 'doe', fullComponentPath: 'full-filepath' }), msg(
 		`Component "doe" found at path "full-filepath"`
+	));
+
+	t.is(logs.componentFound({
+		componentPath: 'doe2',
+		layer: 'generator',
+		fullComponentPath: 'full-filepath2'
+	}), msg(
+		`Component generator "doe2" found at path "full-filepath2"`
+	));
+
+	t.is(logs.componentFound({
+		componentPath: 'groot',
+		layer: 'rocket launcher',
+		fullComponentPath: 'pathTest'
+	}), msg(
+		`Component rocket launcher "groot" found at path "pathTest"`
 	));
 });
 
@@ -60,6 +78,8 @@ test('componentNotFound', t => {
 	));
 });
 
+test.todo('handle layer option');
+
 test('noFilepathMatching', t => {
 	const logs = requireFromIndex('sources/settings/logs');
 
@@ -72,6 +92,8 @@ test('noFilepathMatching', t => {
 		`No filepath match the component path "world.js".`
 	));
 });
+
+test.todo('handle layer option');
 
 test('manyFilepathsMatching', t => {
 	const logs = requireFromIndex('sources/settings/logs');
@@ -87,6 +109,8 @@ test('manyFilepathsMatching', t => {
 		`Try to use a more accurate component path.`
 	));
 });
+
+test.todo('handle layer option');
 
 test('listMatchingFilepaths', t => {
 	const logs = requireFromIndex('sources/settings/logs');
@@ -117,6 +141,8 @@ test('listMatchingFilepaths', t => {
 		filepaths: []
 	}), logs.noFilepathMatching({componentPath: 'no/match/test'}));
 });
+
+test.todo('handle layer option');
 
 test('unvalidGenerator', t => {
 	const logs = requireFromIndex('sources/settings/logs');
